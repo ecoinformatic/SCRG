@@ -6,7 +6,7 @@ rm(list=ls())
 library(nnet)  # easy for using multinomial logistic regression
 
 # Grab data
-data <- read.csv("Tampa_Bay_Living_Shoreline_Suitability_Model_Results.csv")
+data <- read.csv("Sandbox/Tampa_Bay_Living_Shoreline_Suitability_Model_Results.csv")
 
 # Replace NULL or missing values with appropriate data
 data$canal[data$canal == ""] <- "None"
@@ -35,4 +35,4 @@ response_var <- "BMPallSMM"
 name <- "Tampa Bay"
 
 # Run build-up/pair-down R script
-source("scratch4.2.R")
+source("BUPD.R")
