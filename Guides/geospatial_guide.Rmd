@@ -1,0 +1,26 @@
+---
+title: "Geospatial Analysis in R"
+output:
+  pdf_document:
+    pandoc_args: --listings
+    includes:
+      in_header: preamble.tex
+---
+```{css, echo=FALSE}
+pre code {
+  white-space: pre-wrap;
+}
+```
+# Setup 
+This document is for showing the different things you can do with geospatial 
+data in R.
+```{r}
+library(sf) # This is a major existing R library for managing geospatial data 
+p <- paste( # This is the path to the geospatial data 
+  "/media/thellinger/cs3pace1/data/choctawatchee_bay/", 
+  "choctawatchee_bay_lssm.geojson", 
+  sep=""
+) # To keep this under 80 characters to show up in the PDF
+sf <- read_sf(p)
+View(sf)
+```
