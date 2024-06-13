@@ -16,7 +16,7 @@ data in R.
 sf::sf_use_s2(FALSE) # We'll need to do this since the data is planar
 library(sf) # This is a major existing R library for managing geospatial data 
 p <- paste( # This is the path to the geospatial data 
-  "/media/thellinger/cs3pace1/data/choctawatchee_bay/", 
+  "../Data/choctawatchee_bay/", 
   "choctawatchee_bay_lssm.geojson", 
   sep=""
 ) # To keep this under 80 characters to show up in the PDF
