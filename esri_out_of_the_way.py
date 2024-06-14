@@ -69,11 +69,13 @@ class ESRIScraper():
     
     def get_count(self, url):
         post_args = self.post_data.copy()
+        post_args['f'] = "json"
+        post_args['outFields'] = "OBJECTID"
         post_args['returnCountOnly'] = "true" 
 
         response = self.session.post(f"{url}/query", data=post_args, headers=self.headers)
         content = json.loads(response.content.decode())
-        return content['properties']['count']
+        return content
 
     def get_webmaps(self, appid):
         appinfo = self.pull_app_info(appid)
@@ -135,3 +137,4 @@ class ESRIScraper():
                 accepted.append(out_field)
                 time.sleep(2)
         return ','.join(accepted)
+
