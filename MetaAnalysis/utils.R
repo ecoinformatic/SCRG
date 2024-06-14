@@ -57,40 +57,35 @@ scrg__get_geometry_in_polygon <- function(polygon, sf_object) {
   return(subset(sf_object, st_within(sf_object, polygon, sparse = FALSE)))
 }
 
-scrg__make_string_distance_diff <- function(x, y) {
+scrg__make_string_distance_diff <- function(x, y, dropMatches=NULL) {
   # Takes two character vectors and compares the string distances between each
   # element of both vectors. Function returns a matrix of the results.
   x <- sort(x)
   y <- sort(y)
-  if(scrg__venn_set(x, y)[4] == 0){
-    # No values in either vector match
-    return(
-      matrix(
-        c(replicate(length(x), 0), 
-          replicate(length(y), 0)
-        ), 
-        nrow=length(x), 
-        ncol=length(y), 
-        dimnames=list(x, y)
-      )
-    )
-  } else {
-    str_dists <- list()
-    for(a in x){
-      for(b in y){
-        str_dists <- append(str_dists, stringdist(a,b))
+  str_dists <- list()
+  to_drop <- list()
+  for(a in x){
+    for(b in y){
+      dist <- stringdist(a,b)
+      str_dists <- append(str_dists, dist)
+      if((dist == 0) && (dropMatches)){
+        to_drop <- append(to_drop, a)
       }
     }
-    return(
-      matrix(
-        str_dists,
-        nrow=length(x),
-        ncol=length(y),
-        dimnames=list(y,x)
-      )
-    )
+  }
+  dists <- matrix(
+    str_dists,
+    nrow=length(x),
+    ncol=length(y),
+    dimnames=list(y,x)
+  )
+  if(dropMatches){
+    return(dists[,x[!(x %in% to_drop)]])
+  } else {
+    return(dists)    
   }
 }
+
 
 scrg__multiline_length <- function(multiline_str) {
   # Returns the number of LINESTRING in a MULTILINESTRING
