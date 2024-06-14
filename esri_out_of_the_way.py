@@ -12,7 +12,7 @@ class ESRIScraper():
         }
         self.post_data = {
             "where": "1=1",
-            "outFields": "OBJECTID,offshorest,Structure,widebeach,SAV,bathymetry,beach,marsh_all,RiparianLU,bnk_height,exposure,tribs,roads,PermStruc,canal,SandSpit,PublicRamp,defended,Fetch_,SMMv5Class,SMMv5Def,AdditionalInfo,PermittingInfo,Shape__Length,MxQExpCode,rd_pstruc,lowBnkStrc,ShlType,selectThis,StrucList,bmpCountv5,DefDate",
+            "outFields": "OBJECTID,offshorest,Structure,widebeach,SAV,bathymetry,beach,marsh_all,RiparianLU,bnk_height,exposure,tribs,roads,PermStruc,canal,SandSpit,PublicRamp,defended,Fetch_,SMMv5Class,SMMv5Def,AdditionalInfo,PermittingInfo,Shape__Length",
             "f": "pgeojson",
             "geometryType": "esriGeometryEnvelope",
             "spatialRel": "esriSpatialRelIntersects",
@@ -41,7 +41,6 @@ class ESRIScraper():
             "inSR": "",
             "resultType": "none",
             "relationParam": "",
-            "outFields": "",
             "maxAllowableOffset": "",
             "geometryPrecision": "",
             "outSR": "",
@@ -72,7 +71,7 @@ class ESRIScraper():
         post_args = self.post_data.copy()
         post_args['returnCountOnly'] = "true" 
 
-        response = requests.post(f"{url}/query", data=post_args, headers=self.headers)
+        response = self.session.post(f"{url}/query", data=post_args, headers=self.headers)
         content = json.loads(response.content.decode())
         return content['properties']['count']
 
@@ -106,7 +105,7 @@ class ESRIScraper():
                 print(f"Pulling where OBJECTID BETWEEN {objectid_limit} AND {next_limit}")
                 post_args["where"] = f"OBJECTID BETWEEN {objectid_limit} AND {next_limit}"
             objectid_limit = next_limit
-            response = requests.post(f"{url}/query", data=post_args)
+            response = self.session.post(f"{url}/query", data=post_args)
             pulled_data = json.loads(response.content.decode())
             if data:
                 data['features'].extend(pulled_data['features'])
@@ -119,3 +118,20 @@ class ESRIScraper():
             json.dump(data, f)
             print(f"Dumped data to {path}.geojson")
         return data
+
+    def check_out_fields(self, url, sleep=2):
+        accepted = []
+        failed = []
+        post_data = self.post_data.copy()
+        out_fields = post_data['outFields'].split(',')
+        for out_field in out_fields:
+            next_attempt = ','.join(accepted + [out_field])
+            print(f"Out field={next_attempt}")
+            post_data['outFields'] = next_attempt
+            r = self.session.post(f"{url}/query", data=post_data)
+            if "Unable to perform" in r.content.decode():
+                failed.append(out_field)
+            else:
+                accepted.append(out_field)
+                time.sleep(2)
+        return ','.join(accepted)
