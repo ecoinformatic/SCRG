@@ -1,0 +1,80 @@
+---
+title: "Geospatial Analysis in R"
+output: pdf_document
+---
+```{css, echo=FALSE}
+pre code {
+  white-space: pre-wrap;
+}
+```
+# Working with sf and geospatial data
+
+## Setup 
+This document is for showing the different things you can do with geospatial 
+data in R.
+```{r}
+sf::sf_use_s2(FALSE) # We'll need to do this since the data is planar
+library(sf) # This is a major existing R library for managing geospatial data 
+p <- paste( # This is the path to the geospatial data 
+  "../Data/choctawatchee_bay/", 
+  "choctawatchee_bay_lssm.geojson", 
+  sep=""
+) # To keep this under 80 characters to show up in the PDF
+gsobj <- read_sf(p)
+print(gsobj)
+```
+## Coordinate Reference Systems
+So now we have the geospatial data loaded into R. In this case, we are looking
+at the data from Choctawatchee Bay. As is common for LSSM models, this dataset 
+uses a MULTILINE geometry as we are classifying stretches of coast. Now let's 
+see some of the functions we can use to work with this data.
+```{r}
+# This will give us the BBox or Bounding Box, the lon/lat rectangle which covers
+# the extent of all the observations in the dataset
+st_bbox(gsobj)
+```
+Next we'll look at the CRS - Coordinate Reference Systems for the data. This is 
+a pretty important topic that Leah Wasser has [a great lesson for on the website
+Earthdatascience.org](https://www.earthdatascience.org/courses/earth-analytics/spatial-data-r/intro-to-coordinate-reference-systems/)
+```{r}
+st_crs(gsobj)
+```
+So this dataset is using [EPSG 4326](https://epsg.io/4326). This is the same CRS
+used by Google Earth and OpenStreet. It's important that all the objects that
+you're working with are of the same CRS, or else the projections will not be 
+aligned and any calculations made between those objects will be wrong.
+
+Let's look at how to do things by looking at Joe's Bayou. Here are the 
+coordinates I pulled from QGIS to form a bounding box:
+```{r table2, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+joe_bayou_lonlat <- "
+| Longitude | Latitude
+|-----------|:---------|
+| -86.50168 | 30.42225 |	
+| -86.47472	| 30.42225 |	
+| -86.47472	| 30.42225 |	
+| -86.47472	| 30.39530 |	
+| -86.47472 | 30.39530 |
+| -86.50168 | 30.39530 |
+| -86.50168 | 30.39530 |
+| -86.50168	| 30.42225 |
+"
+cat(joe_bayou_lonlat)
+```
+```{r}
+bbox_matrix <- matrix(
+  c(-86.50168, 30.42225, -86.47472, 30.42225, -86.47472, 30.42225, 
+    -86.47472, 30.39530, -86.47472, 30.39530, -86.50168, 30.39530, 
+    -86.50168, 30.39530, -86.50168, 30.42225), 
+  ncol=2, 
+  byrow=TRUE
+)
+
+joes_bayou_bbox <- st_polygon(list(bbox_matrix))
+joes_bayou <- subset(gsobj, st_within(gsobj, joes_bayou_bbox, sparse = FALSE))
+print(joes_bayou)
+```
+
+```{r fig.width=10, fig.height=6}
+plot(joes_bayou['SMMv5Class'])
+```
