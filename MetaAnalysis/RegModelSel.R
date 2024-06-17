@@ -8,7 +8,7 @@ library(nnet)  # easy for using multinomial logistic regression
 # Grab data
 data <- read.csv("Sandbox/Tampa_Bay_Living_Shoreline_Suitability_Model_Results.csv")
 
-# Replace NULL or missing values with appropriate data
+#Replace NULL or missing values with appropriate data
 data$canal[data$canal == ""] <- "None"
 data$SandSpit[data$SandSpit == ""] <- "No"
 data$forestshl[data$forestshl == ""] <- "No"
