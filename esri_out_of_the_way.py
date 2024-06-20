@@ -55,7 +55,7 @@ class ESRIScraper():
             "quantizationParameters": "", 
             "token": ""
     }
-    
+
     def pull_app_info(self, appid):
         url = "https://www.arcgis.com/sharing/rest/content/items/"
         url += f"{appid}/data"
@@ -83,7 +83,14 @@ class ESRIScraper():
                 f"'{appid}' is not a 32 character hex string"
             )
         appinfo = self.pull_app_info(appid)
-        return self.pull_app_info(appinfo['values']['webmap'])
+        result = appinfo.get('values', {}).get('webmap', {})
+        if not result:
+            msg = "key path does not conform to expectation: "
+            msg += "'values => entries', returning appinfo"
+            print(msg)
+            return appinfo
+        else:
+            return self.pull_app_info(appinfo['values']['webmap'])
 
     def check_layers(self, appid, sleep=2):
         webmap_info = self.get_webmaps(appid)
