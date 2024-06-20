@@ -24,3 +24,12 @@ activate
 # With the virtual env activated, install the python dependencies
 pip install -r requirements.txt
 ```
+### R Development
+There is currently no required version of R, but it is recommended that 
+the version be > 4, if not >= 4.3. Make sure that your R environment has the following packages:
+
+```r
+install.package(sf)
+install.package(stringdist)
+install.package(nnet)
+```
