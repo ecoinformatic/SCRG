@@ -1,4 +1,4 @@
-import json, os, requests, time
+import json, os, re, requests, time
 
 
 class ESRIInTheWayException(Exception): pass
@@ -77,7 +77,11 @@ class ESRIScraper():
         content = json.loads(response.content.decode())
         return content
 
-    def get_webmaps(self, appid):
+    def get_webmaps(self, appid) -> dict:
+        if not re.match("[A-Fa-f0-9]{32}", appid):
+            raise ESRIInTheWayException(
+                f"'{appid}' is not a 32 character hex string"
+            )
         appinfo = self.pull_app_info(appid)
         return self.pull_app_info(appinfo['values']['webmap'])
 
