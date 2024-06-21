@@ -1,3 +1,7 @@
 MetaAnalysis/Sandbox
 __pycache__
 scrg_pyenv
+.Rproj.user
+ecoinfoscrg.Rcheck
+.Rbuildignore
+.Rhistory
