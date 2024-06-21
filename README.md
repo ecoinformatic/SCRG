@@ -32,4 +32,6 @@ the version be > 4, if not >= 4.3. Make sure that your R environment has the fol
 install.package(sf)
 install.package(stringdist)
 install.package(nnet)
+install.package(testthat)
+install.package(devtools)
 ```
