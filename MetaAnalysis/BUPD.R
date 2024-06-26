@@ -1,6 +1,8 @@
 ############################################
 # INITIALIZE
 ############################################
+library(nnet)
+
 # Initial empty model
 # Note that `best_formula` starts with `initial_formula` as baseline
 initial_formula <- as.formula(paste(response_var, "~ 1"))
@@ -73,7 +75,7 @@ repeat {
   current_aic <- AIC(multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)) # calculate AIC of current best model
   
   for (predictor in predictors_in_model) { # Loop through each predictors to test their removal
-    pairdown_formula <- as.formula(paste("BMPallSMM ~", paste(setdiff(predictors_in_model, predictor), collapse = "+"))) # New formula without current predictor
+    pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+"))) # New formula without current predictor
     if (length(all.vars(pairdown_formula)[-1]) == 0) { # check if model is empty (no predictors)
       next  # skip iteration if no predictors are left
     }
@@ -115,13 +117,14 @@ coeff <- coef(final_model) # grab coefficients
 # confidence_intervals <- confint(final_model, level = 0.95) # Calculate CI
 odds_ratios <- exp(coeff) # Calculate OR
 
-###################### # Note: Need to fix paths or get better ones
 # `assign` to new variables based on name prefix chosen
 assign(paste0(name_prefix, "_final_model"), final_model)
 assign(paste0(name_prefix, "_final_form"), final_form)
 assign(paste0(name_prefix, "_odds_ratios"), odds_ratios)
 
 # save for later
-saveRDS(get(paste0(name_prefix, "_final_model")), paste0(name_prefix, "_final_model.rds"))
-saveRDS(get(paste0(name_prefix, "_final_form")), paste0(name_prefix, "_final_form.rds"))
-saveRDS(get(paste0(name_prefix, "_odds_ratios")), paste0(name_prefix, "_odds_ratios.rds"))
+output_directory <- "/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput"
+saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_directory, paste0(name_prefix, "_final_model.rds")))
+saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directory, paste0(name_prefix, "_final_form.rds")))
+saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))
+
