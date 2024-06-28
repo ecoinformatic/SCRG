@@ -10,9 +10,9 @@ colnames(resp) <- c("Response", "study")
 # View(pred)
 
 resp_choc <- resp %>% filter(study == "choc")
-resp_pens <- resp %>% filter(study == "IRL")
-resp_tampa <- resp %>% filter(study == "pens")
-resp_IRL <- resp %>% filter(study == "other")
+resp_pens <- resp %>% filter(study == "pens")
+resp_tampa <- resp %>% filter(study == "tampa")
+resp_IRL <- resp %>% filter(study == "IRL")
 
 pred_choc <- pred %>% filter(study == "choc")
 pred_pens <- pred %>% filter(study == "pens")
@@ -21,7 +21,10 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_choc, pred_choc) # choc example
+data <- cbind(resp_IRL, pred_IRL) # choc example
+
+# Specify a short name of the model
+name <- "IRLTestNonParallel"
 ############################
 
 # Grab categorical variables (dummyvars has the separated out names/dummy variables)
@@ -34,14 +37,12 @@ predictors <- c(numerical_vars, dummyvars)
 response_var <- "Response" 
 # response_var <- "BMPallSMM" 
 
-# Specify a short name of the model
-name <- "chocTest"
-
 # # Run build-up/pair-down R script
 start_time <- Sys.time()
-source("/home/gzaragosa/Documents/SCRG/MetaAnalysis/BUPD.R")
+source("MetaAnalysis/BUPD.R")
 end_time <- Sys.time()
 
 # output_formula <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_form.rds")
 # output_model <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_model.rds")
 # output_OR <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_odds_ratios.rds")
+

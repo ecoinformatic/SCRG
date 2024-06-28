@@ -396,3 +396,6 @@ saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_direct
 saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directory, paste0(name_prefix, "_final_form.rds")))
 saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))
 ```
+
+## Output
+Output of the model selection script can be found in the `SCRG/MetaAnalysis/Routput` folder.

@@ -2,7 +2,6 @@
 # INITIALIZE
 ############################################
 library(nnet)
-
 # Initial empty model
 # Note that `best_formula` starts with `initial_formula` as baseline
 initial_formula <- as.formula(paste(response_var, "~ 1"))
@@ -10,7 +9,6 @@ best_formula <- initial_formula
 best_model <- multinom(best_formula, data = data, MaxNWts = 5000)
 best_aic <- AIC(best_model)
 name_prefix <- gsub(" ", "_", name) # add underscores
-
 ############################################
 # BUILD-UP PHASE
 ############################################
@@ -19,13 +17,11 @@ fit_and_evaluate <- function(formula, data) {
   model <- multinom(formula, data = data, MaxNWts = 5000, trace = FALSE) # Note: Using multinomial logistic regression
   AIC(model)  # Using AIC for simplicity, but you can choose other criteria
 }
-
 # Similar to Chris' only with a multinomial logistic regression (which can be switched out)
 for (i in 1:length(predictors)) {
     current_predictors <- all.vars(best_formula)[-1]
     remaining_predictors <- setdiff(predictors, current_predictors) 
     candidate_models <- list()  # for storing model and their AIC
-
     # Build models iteratively based on current best model
     for (predictor in remaining_predictors) {
         new_formula <- update(best_formula, paste(". ~ . +", predictor))
@@ -34,13 +30,11 @@ for (i in 1:length(predictors)) {
         candidate_models[[formula_str]] <- candidate_aic # store the new model and AIC in cadidate model list
         print(paste("Testing build-up formula:", formula_str, "with AIC:", candidate_aic)) # helpful output
     }
-
     # ID the best model
     if (length(candidate_models) > 0) {
         best_candidate <- which.min(unlist(candidate_models)) # ID model with lowest AIC
         best_candidate_formula <- names(candidate_models)[best_candidate] # Get formula of best candidate model (string)
         best_candidate_aic <- unlist(candidate_models[best_candidate_formula])
-
         # Update to the new best model if it improves AIC
         if (best_candidate_aic < best_aic) { # If the AIC of the best candidate model is lower than the current best model's AIC, it replaces the model with the new model
             best_formula <- as.formula(best_candidate_formula) # Converts the model formula string back into a regular formula object
@@ -55,19 +49,15 @@ for (i in 1:length(predictors)) {
         break
     }
 }
-
 #####
-
 # Final model
 best_model <- multinom(best_formula, data = data, MaxNWts = 5000, trace = FALSE)
 # summary(best_model)
-
 
 ############################################
 # PAIR-DOWN PHASE
 ############################################
 current_formula <- best_formula  # start with best FORMULA from build-up phase
-
 # Iteratively remove predictors
 repeat {
   predictors_in_model <- all.vars(current_formula)[-1]  # get all predictors currently in the best model
@@ -102,29 +92,23 @@ repeat {
     break
   }
 }
-
 # Final pairdown model
 final_model <- multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)
 # summary(final_model)
-
 # final formula
 final_form <- formula(final_model)
 # print(final_form)
-
 # # Useful info for meta-analysis
 coeff <- coef(final_model) # grab coefficients
 # standard_err <- sqrt(diag(vcov(final_model))) # Calculate SE (method OK?)
 # confidence_intervals <- confint(final_model, level = 0.95) # Calculate CI
 odds_ratios <- exp(coeff) # Calculate OR
-
 # `assign` to new variables based on name prefix chosen
 assign(paste0(name_prefix, "_final_model"), final_model)
 assign(paste0(name_prefix, "_final_form"), final_form)
 assign(paste0(name_prefix, "_odds_ratios"), odds_ratios)
-
 # save for later
 output_directory <- "/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput"
 saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_directory, paste0(name_prefix, "_final_model.rds")))
 saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directory, paste0(name_prefix, "_final_form.rds")))
 saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))
-
