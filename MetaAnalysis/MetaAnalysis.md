@@ -132,9 +132,18 @@ pred <- pred %>%
     }
     column
   }))
+
+
+# ################### UTILS/UNIQUE VALUES ####################
+# # Get observed states for each column:
+# table(tolower(pens$exposure), useNA = "ifany") # Count info
+# table(tolower(choc$MxQExpCode), useNA = "ifany")
+# table(tolower(tampa$Exposure), useNA = "ifany")
+# table(tolower(pens$exposure), useNA = "ifany")
+# ############################################################
 ```
 
-## A.1. Standardizing Predictors (`standardize.R`)
+## A.1/A.2: Standardizing Predictors (`standardize.R`)
 
 ### Numerical Variables
 To ensure models run without errors, missing values (NA) must be replaced. For numerical variables, we can replace the missing values with the statewide mean (calculated as the mean across all regional datasets). They can then be standardized across studies for consistency.
@@ -210,7 +219,7 @@ pred <- pred %>%
 str(pred)
 ```
 
-## A.2/A.3 Pruning & Model Selection (`pruning.R`)
+## A.3/A.4: Pruning & Model Selection (`pruning.R`)
 The following script is used to prepare predictor and response variables for the model selection workflow contained in `BUPD.R`. The script generates the following outputs, though additional outputs can be added as necessary:
 * `"_final_model.rds"`: Contains model summary and slopes for predictors
 * `"_final_form.rds"`: Contains final model formula with best AIC
@@ -229,9 +238,9 @@ colnames(resp) <- c("Response", "study")
 # View(pred)
 
 resp_choc <- resp %>% filter(study == "choc")
-resp_pens <- resp %>% filter(study == "IRL")
-resp_tampa <- resp %>% filter(study == "pens")
-resp_IRL <- resp %>% filter(study == "other")
+resp_pens <- resp %>% filter(study == "pens")
+resp_tampa <- resp %>% filter(study == "tampa")
+resp_IRL <- resp %>% filter(study == "IRL")
 
 pred_choc <- pred %>% filter(study == "choc")
 pred_pens <- pred %>% filter(study == "pens")
@@ -240,7 +249,10 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_choc, pred_choc) # choc example
+data <- cbind(resp_IRL, pred_IRL) # choc example
+
+# Specify a short name of the model
+name <- "placeholderName"
 ############################
 
 # Grab categorical variables (dummyvars has the separated out names/dummy variables)
@@ -253,13 +265,14 @@ predictors <- c(numerical_vars, dummyvars)
 response_var <- "Response" 
 # response_var <- "BMPallSMM" 
 
-# Specify a short name of the model
-name <- "chocTest"
-
 # # Run build-up/pair-down R script
 start_time <- Sys.time()
-source("/home/gzaragosa/Documents/SCRG/MetaAnalysis/BUPD.R")
+source("MetaAnalysis/BUPD.R")
 end_time <- Sys.time()
+
+# output_formula <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_form.rds")
+# output_model <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_model.rds")
+# output_OR <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_odds_ratios.rds")
 ```
 
 ### Build-Up, Pair-Down Model Selection Script (`BUPD`)
@@ -270,7 +283,6 @@ The following is the build-up, pair-down script used to perform model selection:
 # INITIALIZE
 ############################################
 library(nnet)
-
 # Initial empty model
 # Note that `best_formula` starts with `initial_formula` as baseline
 initial_formula <- as.formula(paste(response_var, "~ 1"))
@@ -278,7 +290,6 @@ best_formula <- initial_formula
 best_model <- multinom(best_formula, data = data, MaxNWts = 5000)
 best_aic <- AIC(best_model)
 name_prefix <- gsub(" ", "_", name) # add underscores
-
 ############################################
 # BUILD-UP PHASE
 ############################################
@@ -287,13 +298,11 @@ fit_and_evaluate <- function(formula, data) {
   model <- multinom(formula, data = data, MaxNWts = 5000, trace = FALSE) # Note: Using multinomial logistic regression
   AIC(model)  # Using AIC for simplicity, but you can choose other criteria
 }
-
 # Similar to Chris' only with a multinomial logistic regression (which can be switched out)
 for (i in 1:length(predictors)) {
     current_predictors <- all.vars(best_formula)[-1]
     remaining_predictors <- setdiff(predictors, current_predictors) 
     candidate_models <- list()  # for storing model and their AIC
-
     # Build models iteratively based on current best model
     for (predictor in remaining_predictors) {
         new_formula <- update(best_formula, paste(". ~ . +", predictor))
@@ -302,13 +311,11 @@ for (i in 1:length(predictors)) {
         candidate_models[[formula_str]] <- candidate_aic # store the new model and AIC in cadidate model list
         print(paste("Testing build-up formula:", formula_str, "with AIC:", candidate_aic)) # helpful output
     }
-
     # ID the best model
     if (length(candidate_models) > 0) {
         best_candidate <- which.min(unlist(candidate_models)) # ID model with lowest AIC
         best_candidate_formula <- names(candidate_models)[best_candidate] # Get formula of best candidate model (string)
         best_candidate_aic <- unlist(candidate_models[best_candidate_formula])
-
         # Update to the new best model if it improves AIC
         if (best_candidate_aic < best_aic) { # If the AIC of the best candidate model is lower than the current best model's AIC, it replaces the model with the new model
             best_formula <- as.formula(best_candidate_formula) # Converts the model formula string back into a regular formula object
@@ -323,19 +330,15 @@ for (i in 1:length(predictors)) {
         break
     }
 }
-
 #####
-
 # Final model
 best_model <- multinom(best_formula, data = data, MaxNWts = 5000, trace = FALSE)
 # summary(best_model)
-
 
 ############################################
 # PAIR-DOWN PHASE
 ############################################
 current_formula <- best_formula  # start with best FORMULA from build-up phase
-
 # Iteratively remove predictors
 repeat {
   predictors_in_model <- all.vars(current_formula)[-1]  # get all predictors currently in the best model
@@ -370,26 +373,21 @@ repeat {
     break
   }
 }
-
 # Final pairdown model
 final_model <- multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)
 # summary(final_model)
-
 # final formula
 final_form <- formula(final_model)
 # print(final_form)
-
 # # Useful info for meta-analysis
 coeff <- coef(final_model) # grab coefficients
 # standard_err <- sqrt(diag(vcov(final_model))) # Calculate SE (method OK?)
 # confidence_intervals <- confint(final_model, level = 0.95) # Calculate CI
 odds_ratios <- exp(coeff) # Calculate OR
-
 # `assign` to new variables based on name prefix chosen
 assign(paste0(name_prefix, "_final_model"), final_model)
 assign(paste0(name_prefix, "_final_form"), final_form)
 assign(paste0(name_prefix, "_odds_ratios"), odds_ratios)
-
 # save for later
 output_directory <- "/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput"
 saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_directory, paste0(name_prefix, "_final_model.rds")))
@@ -397,5 +395,203 @@ saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directo
 saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))
 ```
 
-## Output
+### Output
 Output of the model selection script can be found in the `SCRG/MetaAnalysis/Routput` folder.
+
+## A.5: Constructing Well-Conditioned Uncertainty Matrices
+For each local study, missing parameter estimates are replaced with sample means. Missing covariances in the covariance matrix of parameters are set to 0, and missing variances are set to large values. This aids in maintaining matrix stability.
+
+### Retrieve Betas from Model Output (`getBetas.R`)
+The following script retrieves the parameter estimates generated by the `BUPD.R` script and creates a dataset with those betas listed in column which their respective response variables in rows. There are two primary outputs:
+* `combined_betas`: contains parameter estimates and columns containin info regarding the model, study, and Intercept.
+* `combined_betas_only`: contains only parameter estimates (model, study, and Intercept are removed)
+
+```{R, echo=FALSE}
+library(nnet)
+library(dplyr)
+
+# Get models from .rds
+model_paths <- c("MetaAnalysis/Routput/chocTest_final_model.rds",
+                 "MetaAnalysis/Routput/pensTest_final_model.rds",
+                 "MetaAnalysis/Routput/tampaTest_final_model.rds",
+                 "MetaAnalysis/Routput/IRLTest_final_model.rds")
+model_names <- c("choc", "pens", "tampa", "IRL")
+
+# Load and prep model data
+prepare_df <- function(model_path, model_name) {
+  model <- readRDS(model_path)
+  coef_df <- as.data.frame(coef(model))
+  coef_df$response_category <- rownames(coef_df)
+  coef_df$model <- model_name
+  return(coef_df)
+}
+
+# Grab and combine betas
+model_data_frames <- Map(prepare_df, model_paths, model_names)
+
+# Create data frames for each model
+choc_betas <- model_data_frames[[1]]
+pens_betas <- model_data_frames[[2]]
+tampa_betas <- model_data_frames[[3]]
+IRL_betas <- model_data_frames[[4]]
+
+# Combine all individual data frames
+combined_betas <- bind_rows(model_data_frames)
+combined_betas <- combined_betas %>%
+  arrange(response_category, model) # Rearrange/move response to the left 
+
+# check
+choc_betas
+pens_betas
+tampa_betas
+IRL_betas
+combined_betas
+
+#######################
+# GET COLUMNS FOR EACH STUDY
+#######################
+# Generate dummy variable names function
+generate_dummy_colnames <- function(base_cols, pred_cols) {
+  dummy_colnames <- pred_cols[grepl(paste(base_cols, collapse = "|"), pred_cols)]
+  return(dummy_colnames)
+}
+
+# Extract "base" (original) column names from dummy variables in `pred`
+base_pred_cols <- unique(sub("_.*", "", colnames(pred)))
+
+# Match study columns to dummy variable format in pred
+match_study_to_pred <- function(study_cols, pred_cols) {
+  base_study_cols <- intersect(study_cols, base_pred_cols)
+  dummy_colnames <- generate_dummy_colnames(base_study_cols, pred_cols)
+  return(dummy_colnames)
+}
+
+# Get dummy variable names for studies
+choc_dcolnames <- match_study_to_pred(colnames(choc), colnames(pred))
+pens_dcolnames <- match_study_to_pred(colnames(pens), colnames(pred))
+tampa_dcolnames <- match_study_to_pred(colnames(tampa), colnames(pred))
+IRL_dcolnames <- match_study_to_pred(colnames(IRL), colnames(pred))
+choc_dcolnames
+pens_dcolnames
+tampa_dcolnames
+IRL_dcolnames
+
+#######################
+# ENSURE STUDY BETAS CONTAIN NECESSARY COLUMNS
+#######################
+# Function to add missing columns as numeric
+add_missing_columns <- function(df, colnames_vec) {
+  missing_cols <- setdiff(colnames_vec, colnames(df))
+  for (col in missing_cols) {
+    df[[col]] <- as.numeric(NA)
+  }
+  return(df)
+}
+
+# Add missing columns to each study's betas dataframe
+choc_betas <- add_missing_columns(choc_betas, choc_dcolnames)
+pens_betas <- add_missing_columns(pens_betas, pens_dcolnames)
+tampa_betas <- add_missing_columns(tampa_betas, tampa_dcolnames)
+IRL_betas <- add_missing_columns(IRL_betas, IRL_dcolnames)
+convert_to_numeric <- function(df) {
+  df[] <- lapply(df, function(col) if(is.logical(col)) as.numeric(col) else col)
+  return(df)
+}
+
+choc_betas <- convert_to_numeric(choc_betas)
+pens_betas <- convert_to_numeric(pens_betas)
+tampa_betas <- convert_to_numeric(tampa_betas)
+IRL_betas <- convert_to_numeric(IRL_betas)
+
+#######################
+# CALCULATE AND FILL STUDY AVERAGES
+#######################
+# Helpful for averaging:
+calculate_study_average <- function(df) {
+  numeric_cols <- df %>%
+    select(-`(Intercept)`, where(is.numeric)) %>%
+    select_if(~ is.numeric(.) && !all(is.na(.))) # make sure they're numeric!!!
+  avg <- mean(unlist(lapply(numeric_cols, as.numeric)), na.rm = TRUE)
+  return(avg)
+}
+
+# Calculate study beta averages
+choc_avg <- calculate_study_average(choc_betas)
+pens_avg <- calculate_study_average(pens_betas)
+tampa_avg <- calculate_study_average(tampa_betas)
+IRL_avg <- calculate_study_average(IRL_betas)
+choc_avg
+pens_avg
+tampa_avg
+IRL_avg
+
+# Fill missing values with the study average
+fill_missing_with_average <- function(df, average) {
+  numeric_cols <- df %>%
+    select(-`(Intercept)`, where(is.numeric))
+  df[names(numeric_cols)] <- lapply(numeric_cols, function(col) {
+    ifelse(is.na(col), average, col)
+  })
+  return(df)
+}
+
+# Relace missing values with averages
+choc_betas <- fill_missing_with_average(choc_betas, choc_avg)
+pens_betas <- fill_missing_with_average(pens_betas, pens_avg)
+tampa_betas <- fill_missing_with_average(tampa_betas, tampa_avg)
+IRL_betas <- fill_missing_with_average(IRL_betas, IRL_avg)
+
+# New column for "response_category"
+choc_betas$response_category <- rownames(choc_betas)
+pens_betas$response_category <- rownames(pens_betas)
+tampa_betas$response_category <- rownames(tampa_betas)
+IRL_betas$response_category <- rownames(IRL_betas)
+
+# Remove row names
+rownames(choc_betas) <- NULL
+rownames(pens_betas) <- NULL
+rownames(tampa_betas) <- NULL
+rownames(IRL_betas) <- NULL
+
+print(head(choc_betas))
+print(head(pens_betas))
+print(head(tampa_betas))
+print(head(IRL_betas))
+
+######### YOU ARE HERE #########
+# Combine datasets
+combined_betas <- bind_rows(choc_betas, pens_betas, tampa_betas, IRL_betas)
+
+# Ignoring character columns, study column, (Intercept) re and other character columns and intercept
+combined_betas_only <- combined_betas %>%
+  select(-response_category, -model, -study, -`(Intercept)`, where(is.numeric))
+View(combined_betas_only)
+
+## Note: Both "NA" and "Invalid Number" are present
+```
+
+### Generate Variance-Covariance Matrix (`varCov.R`)
+The following script using the `cov()` function in R to generate a variance-covaraince matrix for the parameter estimates(betas). It replaces missing betas for a study (that were pruned out during model selection) with the mean value for that study. It also replaces missing covariance values with zeros (i.e., no known relationship between parameters) and missing variance values with an arbritrarily high value (high possible range of effects of that parameter on the outcome).
+
+```{R, echo=FALSE}
+# Generate covariance matrix
+cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs")
+
+# Find where there's missing values
+missing_values <- is.na(cov_matrix)
+
+# Set missing off-diagonals to zero
+cov_matrix[missing_values & !row(cov_matrix) == col(cov_matrix)] <- 0
+
+# Set missing variances to a very large value
+large_value <- 1000000 # arbitrary; might need to adjust later
+diag(cov_matrix)[missing_values[diag(TRUE, nrow(cov_matrix))]] <- large_value
+```
+
+## A.6: Meta-Analytic Regression
+The following script uses the `metafor` package in R to perform meta-analytic regression.
+* Add info about matrix solvers
+
+```{R, echo=FALSE}
+# TBD
+```
