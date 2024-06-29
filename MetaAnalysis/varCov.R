@@ -1,3 +1,11 @@
+
+# remove (Intercept), response_category, model, study
+columns_to_exclude <- c("(Intercept)", "response_category", "model", "study")
+combined_betas_only <- combined_betas %>%
+  select(-all_of(columns_to_exclude))
+rownames(combined_betas_only) <- NULL
+
+
 # Generate covariance matrix
 cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs")
 

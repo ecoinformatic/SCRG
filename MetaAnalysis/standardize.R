@@ -50,7 +50,7 @@ pred <- pred %>%
 
 # Make dummy vars
 for (var in categorical_vars) {
-  dummies <- model.matrix(~ . - 1, data = pred[var])  # suggested to avoid itercept
+  dummies <- model.matrix(~ . - 1, data = pred[var])  # suggested to avoid iterceptncol
   colnames(dummies) <- paste(var, levels(pred[[var]]), sep = "_")
   pred <- cbind(pred, as.data.frame(dummies))
 }
