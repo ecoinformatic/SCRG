@@ -21,10 +21,10 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_IRL, pred_IRL) # choc example
+data <- cbind(resp_choc, pred_choc) # choc example
 
 # Specify a short name of the model
-name <- "IRLTestNonParallel"
+name <- "chocContinuous"
 ############################
 
 # Grab categorical variables (dummyvars has the separated out names/dummy variables)
@@ -35,11 +35,10 @@ predictors <- c(numerical_vars, dummyvars)
 
 # Define the response variable
 response_var <- "Response" 
-# response_var <- "BMPallSMM" 
 
 # # Run build-up/pair-down R script
 start_time <- Sys.time()
-source("MetaAnalysis/BUPD.R")
+source("ecoinfoscrg/R/MetaAnalysis/BUPD.R")
 end_time <- Sys.time()
 
 # output_formula <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_form.rds")

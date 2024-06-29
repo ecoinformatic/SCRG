@@ -6,9 +6,11 @@ library(nnet)
 # Note that `best_formula` starts with `initial_formula` as baseline
 initial_formula <- as.formula(paste(response_var, "~ 1"))
 best_formula <- initial_formula
-best_model <- multinom(best_formula, data = data, MaxNWts = 5000)
+# best_model <- multinom(best_formula, data = data, MaxNWts = 5000)
+
 best_aic <- AIC(best_model)
 name_prefix <- gsub(" ", "_", name) # add underscores
+
 ############################################
 # BUILD-UP PHASE
 ############################################
@@ -49,6 +51,7 @@ for (i in 1:length(predictors)) {
         break
     }
 }
+
 #####
 # Final model
 best_model <- multinom(best_formula, data = data, MaxNWts = 5000, trace = FALSE)
@@ -92,14 +95,18 @@ repeat {
     break
   }
 }
+
 # Final pairdown model
 final_model <- multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)
+
 # summary(final_model)
 # final formula
 final_form <- formula(final_model)
+
 # print(final_form)
 # # Useful info for meta-analysis
 coeff <- coef(final_model) # grab coefficients
+
 # standard_err <- sqrt(diag(vcov(final_model))) # Calculate SE (method OK?)
 # confidence_intervals <- confint(final_model, level = 0.95) # Calculate CI
 odds_ratios <- exp(coeff) # Calculate OR
@@ -107,8 +114,9 @@ odds_ratios <- exp(coeff) # Calculate OR
 assign(paste0(name_prefix, "_final_model"), final_model)
 assign(paste0(name_prefix, "_final_form"), final_form)
 assign(paste0(name_prefix, "_odds_ratios"), odds_ratios)
+
 # save for later
-output_directory <- "/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput"
+output_directory <- "ecoinfoscrg/R/MetaAnalysis/Routput"
 saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_directory, paste0(name_prefix, "_final_model.rds")))
 saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directory, paste0(name_prefix, "_final_form.rds")))
 saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))
