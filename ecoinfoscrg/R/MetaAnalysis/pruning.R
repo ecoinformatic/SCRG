@@ -17,10 +17,10 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_choc, pred_choc) # choc example
+data <- cbind(resp_IRL, pred_IRL) # choc example
 
 # Specify a short name of the model
-name <- "testContinuous"
+name <- "IRLContinuous"
 ############################
 
 # Grab categorical variables (dummyvars has the separated out names/dummy variables)

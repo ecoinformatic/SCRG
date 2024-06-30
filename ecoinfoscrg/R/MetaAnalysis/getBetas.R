@@ -67,7 +67,7 @@ combined_betas[4, ][is.na(combined_betas[4, ])] <- IRL_avg
 
 combined_betas$study <- c("choc", "pens", "tampa", "IRL")
 
-View(combined_betas)
+# View(combined_betas)
 
 # Remove study columned
 combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
@@ -109,7 +109,7 @@ combined_se[3, ][is.na(combined_se[3, ])] <- tampa_avg_se
 combined_se[4, ][is.na(combined_se[4, ])] <- IRL_avg_se
 
 combined_betas$study <- c("choc", "pens", "tampa", "IRL")
-View(combined_se)
+# View(combined_se)
 
 # remove study column
 combined_se_only <- combined_se[, !colnames(combined_se) %in% "study"]
