@@ -31,7 +31,3 @@ for (i in 1:num_columns) {
   overall_effect[i] <- weighted_mean
   overall_standard_error[i] <- combined_standard_error
 }
-
-# Print the results
-cat("Overall Effect Sizes: ", overall_effect, "\n")
-cat("Standard Errors of the Overall Effect Sizes: ", overall_standard_error, "\n")

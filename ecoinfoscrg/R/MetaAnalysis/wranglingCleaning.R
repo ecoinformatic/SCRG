@@ -176,11 +176,3 @@ pred <- pred %>%
     }
     column
   }))
-
-# ################### UTILS/UNIQUE VALUES ####################
-# # Get observed states for each column:
-# table(tolower(pens$exposure), useNA = "ifany") # Count info
-# table(tolower(choc$MxQExpCode), useNA = "ifany")
-# table(tolower(tampa$Exposure), useNA = "ifany")
-# table(tolower(pens$exposure), useNA = "ifany")
-# ############################################################

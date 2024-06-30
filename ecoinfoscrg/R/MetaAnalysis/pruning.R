@@ -4,10 +4,6 @@
 library(dplyr)
 resp <- as.data.frame(cbind(state$Response, state$study))
 colnames(resp) <- c("Response", "study")
-# str(resp)
-# str(pred)
-# View(resp)
-# View(pred)
 
 resp_choc <- resp %>% filter(study == "choc")
 resp_pens <- resp %>% filter(study == "pens")
@@ -47,11 +43,4 @@ input$study <- as.factor(input$study)
 start_time <- Sys.time()
 source("ecoinfoscrg/R/MetaAnalysis/BUPD.R")
 end_time <- Sys.time()
-
-# output_formula <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_form.rds")
-# output_model <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_model.rds")
-# output_OR <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_odds_ratios.rds")
-
-# IRLtest <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/IRLContinuous_average_betas.rds")
-# tampatest <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/tampaContinuous_average_betas.rds")
 

@@ -13,6 +13,7 @@ pensBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/pensContinuous_average_
 IRLBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/IRLContinuous_average_betas.rds")
 tampaBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/tampaContinuous_average_betas.rds")
 
+###############
 # Define predictor columns
 predictor_columns <- colnames(combined_betas_only)
 
@@ -37,6 +38,11 @@ max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
 # Adjust eigenvalues
 adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
 adjusted_cov_matrix <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
+
+# Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
+epsilon <- 1e-6
+adjusted_cov_matrix <- adjusted_cov_matrix + diag(epsilon, nrow(adjusted_cov_matrix))
+
 
 ##############
 yi <- overall_effect
