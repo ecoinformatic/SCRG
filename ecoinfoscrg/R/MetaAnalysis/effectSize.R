@@ -1,5 +1,3 @@
-source("ecoinfoscrg/R/MetaAnalysis/getBetas.R")
-
 # Number of columns
 num_columns <- ncol(combined_betas_only)
 
@@ -31,3 +29,15 @@ for (i in 1:num_columns) {
   overall_effect[i] <- weighted_mean
   overall_standard_error[i] <- combined_standard_error
 }
+
+
+
+# #####
+# col_names <- colnames(combined_betas_only)
+# overall_effect_df <- as.data.frame(t(overall_effect))  
+# colnames(overall_effect_df) <- col_names 
+# View(overall_effect_df)
+
+# ##### average betas #####
+# average_betas <- data.frame(t(colMeans(combined_betas_only, na.rm = TRUE)))
+# view(average_betas)

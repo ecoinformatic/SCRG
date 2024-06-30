@@ -20,7 +20,7 @@ pred_IRL <- pred %>% filter(study == "IRL")
 data <- cbind(resp_choc, pred_choc) # choc example
 
 # Specify a short name of the model
-name <- "chocContinuous"
+name <- "testContinuous"
 ############################
 
 # Grab categorical variables (dummyvars has the separated out names/dummy variables)

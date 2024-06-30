@@ -8,6 +8,7 @@ missing_values <- is.na(cov_matrix)
 cov_matrix[missing_values & !row(cov_matrix) == col(cov_matrix)] <- 0
 
 # Set missing variances to very large value
-large_value <- 1000000
+large_value <- 10000
 diag(cov_matrix)[missing_values[diag(TRUE, nrow(cov_matrix))]] <- large_value
 View(cov_matrix)
+

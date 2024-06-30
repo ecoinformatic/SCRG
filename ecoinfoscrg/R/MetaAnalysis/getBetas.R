@@ -1,4 +1,5 @@
 library(dplyr)
+library(lme4)
 
 ############################
 # GRAB MODEL OUTPUT

@@ -24,6 +24,7 @@ formula <- as.formula(formula_string)
 # Prepare the beta estimates
 betas <- combined_betas_only
 
+
 ###########
 eigen_decomp <- eigen(cov_matrix)
 eigenvalues <- eigen_decomp$values
@@ -32,24 +33,31 @@ eigenvectors <- eigen_decomp$vectors
 # Find the smallest positive eigenvalue
 smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
 
-# Define the maximum allowed variance
-max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
+# # Define the maximum allowed variance
+# max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
 
 # Adjust eigenvalues
-adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
+adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
+# adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+
+# adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
+# adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
 adjusted_cov_matrix <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
 
+# another check
+smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
+smallest_eigenvalue
+
+#####
 # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
 epsilon <- 1e-6
 adjusted_cov_matrix <- adjusted_cov_matrix + diag(epsilon, nrow(adjusted_cov_matrix))
-
-
-##############
-yi <- overall_effect
+#####
 
 # Fit the meta-analytic model using rma.mv from the metafor package
 meta_result <- rma.mv(
-  yi = yi,
+  yi = overall_effect,
   V = adjusted_cov_matrix
 )
 
