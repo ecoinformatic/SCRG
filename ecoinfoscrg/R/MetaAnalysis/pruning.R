@@ -36,6 +36,13 @@ predictors <- c(numerical_vars, dummyvars)
 # Define the response variable
 response_var <- "Response" 
 
+# NEW! 
+resp <- data.frame(Response = state$Response)
+study <- data.frame(study = state$study)
+input <- cbind(resp, pred)
+input$SMMv5Def <- NULL
+input$study <- as.factor(input$study)
+
 # # Run build-up/pair-down R script
 start_time <- Sys.time()
 source("ecoinfoscrg/R/MetaAnalysis/BUPD.R")
@@ -44,3 +51,7 @@ end_time <- Sys.time()
 # output_formula <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_form.rds")
 # output_model <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_model.rds")
 # output_OR <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_odds_ratios.rds")
+
+# IRLtest <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/IRLContinuous_average_betas.rds")
+# tampatest <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/tampaContinuous_average_betas.rds")
+

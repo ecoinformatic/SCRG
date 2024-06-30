@@ -1,122 +1,111 @@
-############################################
-# INITIALIZE
-############################################
-library(nnet)
-# Initial empty model
-# Note that `best_formula` starts with `initial_formula` as baseline
-initial_formula <- as.formula(paste(response_var, "~ 1"))
-best_formula <- initial_formula
-# best_model <- multinom(best_formula, data = data, MaxNWts = 5000)
+# Note: GPT-4o helped subset and parallelize the original version of this script
+## Generally looks ok but may want to carefully check later since not much checks/output
+library(lme4)
+library(parallel)
+library(doParallel)
+name_prefix <- gsub(" ", "_", name)
 
-best_aic <- AIC(best_model)
-name_prefix <- gsub(" ", "_", name) # add underscores
+# Setup parallel backend to use multiple cores
+cl <- makeCluster(detectCores() - 1)
+registerDoParallel(cl)
 
-############################################
-# BUILD-UP PHASE
-############################################
-# Function to fit and evaluate models (similar to Chris' only with a multinomial logistic regression for this specific dataset)
-fit_and_evaluate <- function(formula, data) {
-  model <- multinom(formula, data = data, MaxNWts = 5000, trace = FALSE) # Note: Using multinomial logistic regression
-  AIC(model)  # Using AIC for simplicity, but you can choose other criteria
-}
-# Similar to Chris' only with a multinomial logistic regression (which can be switched out)
-for (i in 1:length(predictors)) {
-    current_predictors <- all.vars(best_formula)[-1]
-    remaining_predictors <- setdiff(predictors, current_predictors) 
-    candidate_models <- list()  # for storing model and their AIC
-    # Build models iteratively based on current best model
-    for (predictor in remaining_predictors) {
-        new_formula <- update(best_formula, paste(". ~ . +", predictor))
-        formula_str <- paste(deparse(new_formula, width.cutoff = 500), collapse = "") # converts model formulat to string. Note that the width.cutoff and collapse are EXTREMELY important or deparse will split your string into two lines by default
-        candidate_aic <- fit_and_evaluate(new_formula, data) # using the `fit_and_evaluate` function from above to fit new model and calculate AIC
-        candidate_models[[formula_str]] <- candidate_aic # store the new model and AIC in cadidate model list
-        print(paste("Testing build-up formula:", formula_str, "with AIC:", candidate_aic)) # helpful output
-    }
-    # ID the best model
-    if (length(candidate_models) > 0) {
-        best_candidate <- which.min(unlist(candidate_models)) # ID model with lowest AIC
-        best_candidate_formula <- names(candidate_models)[best_candidate] # Get formula of best candidate model (string)
-        best_candidate_aic <- unlist(candidate_models[best_candidate_formula])
-        # Update to the new best model if it improves AIC
-        if (best_candidate_aic < best_aic) { # If the AIC of the best candidate model is lower than the current best model's AIC, it replaces the model with the new model
-            best_formula <- as.formula(best_candidate_formula) # Converts the model formula string back into a regular formula object
-            best_aic <- best_candidate_aic # Updates best_aic to the AIC of the new best model
-            print(paste("New best model:", best_candidate_formula, "AIC:", best_aic)) # helpful output
-        } else {
-            print("No further improvement, stopping build-up.")
-            break  
+# Ensure all necessary packages are loaded on each worker node
+clusterEvalQ(cl, {
+    library(lme4)
+})
+
+# Subset
+subsets <- split(input, sample(1:4, nrow(input), replace = TRUE))
+
+# Function to apply model building phases on a subset of data
+process_subset <- function(subset_data, response_var, predictors) {
+    initial_formula <- reformulate(c("(1|study)"), response = response_var)
+    best_model <- lmer(initial_formula, data = subset_data)
+    best_aic <- AIC(best_model)
+    
+    # Build-Up Phase
+    for (predictor in predictors) {
+        new_formula <- update(initial_formula, paste(". ~ . +", predictor))
+        model <- lmer(new_formula, data = subset_data)
+        current_aic <- AIC(model)
+        if (current_aic < best_aic) {
+            initial_formula <- new_formula
+            best_model <- model
+            best_aic <- current_aic
         }
-    } else {
-        print("No more predictors to test, stopping build-up.")
-        break
     }
+
+    # Pair-Down Phase
+    while (length(all.vars(initial_formula)[-1]) > 0) {
+        current_aic <- best_aic
+        improvements <- FALSE
+
+        predictors_in_model <- all.vars(initial_formula)[-1]
+        for (predictor in predictors_in_model) {
+            reduced_formula <- update(initial_formula, paste(". ~ . -", predictor))
+            model <- lmer(reduced_formula, data = subset_data)
+            reduced_aic <- AIC(model)
+
+            if (reduced_aic < current_aic) {
+                initial_formula <- reduced_formula
+                best_model <- model
+                best_aic <- reduced_aic
+                improvements <- TRUE
+            }
+        }
+
+        if (!improvements) break
+    }
+
+    return(coef(summary(best_model)))
 }
 
-#####
-# Final model
-best_model <- multinom(best_formula, data = data, MaxNWts = 5000, trace = FALSE)
-# summary(best_model)
+# Run models on each subset in parallel
+results <- parLapply(cl, subsets, process_subset, response_var = response_var, predictors = predictors)
 
-############################################
-# PAIR-DOWN PHASE
-############################################
-current_formula <- best_formula  # start with best FORMULA from build-up phase
-# Iteratively remove predictors
-repeat {
-  predictors_in_model <- all.vars(current_formula)[-1]  # get all predictors currently in the best model
-  candidate_models <- list() # list to store models and AIC
-  current_aic <- AIC(multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)) # calculate AIC of current best model
-  
-  for (predictor in predictors_in_model) { # Loop through each predictors to test their removal
-    pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+"))) # New formula without current predictor
-    if (length(all.vars(pairdown_formula)[-1]) == 0) { # check if model is empty (no predictors)
-      next  # skip iteration if no predictors are left
-    }
-    pairdown_aic <- AIC(multinom(pairdown_formula, data = data, MaxNWts = 5000, trace = FALSE)) # fit pairdown model, get AIC
-    formula_str <- paste(deparse(pairdown_formula, width.cutoff = 500), collapse = "") # store the name/string of the model properly
-    candidate_models[formula_str] <- pairdown_aic # Store AIC and formula of pairdown model
-    print(paste("Testing pairdown formula:", deparse(pairdown_formula), "with AIC:", pairdown_aic)) # Helpful output
-  }
-  
-  # See if any pairdown model is better than current best model
-  if (length(candidate_models) > 0) { 
-    best_pairdown_aic <- min(sapply(candidate_models, identity)) # find smallest AIC among pairdown models
-    if (best_pairdown_aic < current_aic) { # If a pairdown model has lower AIC, update current best model
-      best_pairdown_formula <- names(candidate_models)[which.min(sapply(candidate_models, identity))]
-      current_formula <- as.formula(best_pairdown_formula)
-      current_aic <- best_pairdown_aic
-      print(paste("New best pairdown model:", best_pairdown_formula, "AIC:", best_pairdown_aic)) # Output new model's formula and AIC
-    } else {
-      print("No further improvement, final model selected.")
-      break  # Exit loop if no improvement
-    }
+# Stop and deregister parallel backend
+stopCluster(cl)
+
+
+
+
+
+
+# Get a list of all predictor names from each matrix
+all_predictors <- unique(unlist(lapply(results, function(x) if (!is.null(x)) rownames(x))))
+
+# Create a template matrix with all predictors and zeros
+template <- matrix(0, nrow = length(all_predictors), ncol = 3, dimnames = list(all_predictors, c("Estimate", "Std. Error", "t value")))
+
+standardized_results <- lapply(results, function(x) {
+  if (is.null(x)) {
+    return(template)
   } else {
-    print("No improvement, stopping pair-down phase.") # If no pairdown models found with lower AIC, then stops the process
-    break
+    # Create a copy of the template
+    standardized_matrix <- template
+    # Update the values for predictors present in this subset's result
+    intersecting_predictors <- intersect(rownames(x), rownames(template))
+    standardized_matrix[intersecting_predictors, ] <- x[intersecting_predictors, ]
+    return(standardized_matrix)
   }
-}
+})
 
-# Final pairdown model
-final_model <- multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)
+# Sum the standardized matrices
+total_sum <- Reduce("+", standardized_results)
 
-# summary(final_model)
-# final formula
-final_form <- formula(final_model)
+# Calculate the average
+average_betas <- total_sum / length(standardized_results)
 
-# print(final_form)
-# # Useful info for meta-analysis
-coeff <- coef(final_model) # grab coefficients
+# Print the average results
+print(average_betas)
 
-# standard_err <- sqrt(diag(vcov(final_model))) # Calculate SE (method OK?)
-# confidence_intervals <- confint(final_model, level = 0.95) # Calculate CI
-odds_ratios <- exp(coeff) # Calculate OR
-# `assign` to new variables based on name prefix chosen
-assign(paste0(name_prefix, "_final_model"), final_model)
-assign(paste0(name_prefix, "_final_form"), final_form)
-assign(paste0(name_prefix, "_odds_ratios"), odds_ratios)
 
-# save for later
+
+
+
+# Save output
 output_directory <- "ecoinfoscrg/R/MetaAnalysis/Routput"
-saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_directory, paste0(name_prefix, "_final_model.rds")))
-saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directory, paste0(name_prefix, "_final_form.rds")))
-saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))
+saveRDS(average_betas, file = file.path(output_directory, paste0(name_prefix, "_average_betas.rds")))
+
+
+
