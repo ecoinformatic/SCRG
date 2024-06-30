@@ -13,7 +13,6 @@ pensBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/pensContinuous_average_
 IRLBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/IRLContinuous_average_betas.rds")
 tampaBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/tampaContinuous_average_betas.rds")
 
-
 # Define predictor columns
 predictor_columns <- colnames(combined_betas_only)
 
@@ -49,22 +48,4 @@ meta_result <- rma.mv(
 )
 
 summary(meta_result)
-
-
-
-
-
-
-
-
-
-
-library(reshape2)
-
-# Assuming combined_betas_only is your data frame with betas from four studies
-combined_betas_long <- melt(combined_betas_only)
-combined_betas_long <- combined_betas_long[order(combined_betas_long$variable, combined_betas_long$Var1),]
-
-# Extract the effect sizes (betas)
-yi <- combined_betas_long$value
 
