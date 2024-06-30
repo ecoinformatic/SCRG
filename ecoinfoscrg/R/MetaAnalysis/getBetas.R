@@ -68,3 +68,47 @@ combined_betas$study <- c("choc", "pens", "tampa", "IRL")
 
 View(combined_betas)
 
+# Remove study columned
+combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
+
+################################
+# SE(for effect size)
+################################
+# Function to convert model out put to dataframe (only keep "Estimate")
+prepare_se_df <- function(matrix, source) {
+    df <- as.data.frame(t(matrix))
+    df <- df[2, , drop = FALSE] # Keep "Estimate"
+    colnames(df) <- rownames(matrix)
+    missing_cols <- setdiff(numeric_pred_cols, rownames(matrix)) # missing predictors as NA
+    df[missing_cols] <- NA
+    df <- df[, numeric_pred_cols] # order columns
+    df$study <- source
+    return(df)
+}
+
+chocDF_se <- prepare_df(chocBetas, "choc")
+pensDF_se <- prepare_df(pensBetas, "pens")
+tampaDF_se <- prepare_df(tampaBetas, "tampa")
+IRLDF_se <- prepare_df(IRLBetas, "IRL")
+
+combined_se <- rbind(chocDF_se, pensDF_se, tampaDF_se, IRLDF_se)
+combined_se[] <- lapply(combined_se, function(x) as.numeric(as.character(x)))
+
+row_averages_se <- apply(combined_se, 1, function(row) mean(row, na.rm = TRUE))
+
+choc_avg_se <- row_averages_se[1]
+pens_avg_se <- row_averages_se[2]
+tampa_avg_se <- row_averages_se[3]
+IRL_avg_se <- row_averages_se[4]
+
+# Replace NAs
+combined_se[1, ][is.na(combined_se[1, ])] <- choc_avg_se
+combined_se[2, ][is.na(combined_se[2, ])] <- pens_avg_se
+combined_se[3, ][is.na(combined_se[3, ])] <- tampa_avg_se
+combined_se[4, ][is.na(combined_se[4, ])] <- IRL_avg_se
+
+combined_betas$study <- c("choc", "pens", "tampa", "IRL")
+View(combined_se)
+
+# remove study column
+combined_se_only <- combined_se[, !colnames(combined_se) %in% "study"]

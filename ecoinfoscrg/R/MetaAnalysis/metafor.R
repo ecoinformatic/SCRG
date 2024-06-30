@@ -5,6 +5,7 @@ source("ecoinfoscrg/R/MetaAnalysis/wranglingCleaning.R")
 source("ecoinfoscrg/R/MetaAnalysis/standardize.R")
 source("ecoinfoscrg/R/MetaAnalysis/getBetas.R")
 source("ecoinfoscrg/R/MetaAnalysis/varCov.R")
+source("ecoinfoscrg/R/MetaAnalysis/effectSize.R")
 
 # Model output for each study can be found here:
 chocBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/chocContinuous_average_betas.rds")
@@ -32,17 +33,14 @@ eigenvectors <- eigen_decomp$vectors
 smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
 
 # Define the maximum allowed variance
-max_allowed_variance <- (1 / .Machine$double.eps) * smallest_eigenvalue
+max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
 
 # Adjust eigenvalues
 adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
 adjusted_cov_matrix <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
 
-# View(adjusted_cov_matrix)
-
-# ##### testing #####
-yi <- as.numeric(unlist(combined_betas_only[1,]))
-# ##############
+##############
+yi <- overall_effect
 
 # Fit the meta-analytic model using rma.mv from the metafor package
 meta_result <- rma.mv(
@@ -60,4 +58,13 @@ summary(meta_result)
 
 
 
+
+library(reshape2)
+
+# Assuming combined_betas_only is your data frame with betas from four studies
+combined_betas_long <- melt(combined_betas_only)
+combined_betas_long <- combined_betas_long[order(combined_betas_long$variable, combined_betas_long$Var1),]
+
+# Extract the effect sizes (betas)
+yi <- combined_betas_long$value
 

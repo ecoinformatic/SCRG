@@ -1,6 +1,3 @@
-# Remove study columned
-combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
-
 # Generate covariance matrix
 cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs")
 
