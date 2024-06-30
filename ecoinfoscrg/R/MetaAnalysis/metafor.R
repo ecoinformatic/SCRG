@@ -6,6 +6,13 @@ source("ecoinfoscrg/R/MetaAnalysis/standardize.R")
 source("ecoinfoscrg/R/MetaAnalysis/getBetas.R")
 source("ecoinfoscrg/R/MetaAnalysis/varCov.R")
 
+# Model output for each study can be found here:
+chocBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/chocContinuous_average_betas.rds")
+pensBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/pensContinuous_average_betas.rds")
+IRLBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/IRLContinuous_average_betas.rds")
+tampaBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/tampaContinuous_average_betas.rds")
+
+
 # Define predictor columns
 predictor_columns <- colnames(combined_betas_only)
 
