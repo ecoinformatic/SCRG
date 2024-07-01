@@ -1,9 +1,7 @@
 \name{scrg__get_geometry_in_bbox__point_list}
 \alias{scrg__get_geometry_in_bbox__point_list}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
-%%  ~~function to do ... ~~
-}
+\title{scrg__get_geometry_in_bbox_pointlist}
 \description{
 This function takes a series of points and an sf object, and returns a subset of
 the sf object that falls within the bounding box formed by the series of points.
@@ -16,12 +14,12 @@ scrg__get_geometry_in_bbox(point_list, sf_object, byrow=TRUE)
     The list of the latitudes and longitudes that form a bounding box.
   }
   \item{sf_object}{
-    This is the geospatial collection and needs to be a variable of the class 
+    This is the geospatial collection and needs to be a variable of the class
     "sf".
   }
   \item{byrow}{
     This is an optional boolean value that determines whether the list of points
-    are read as pairs (ie. byrow=TRUE) or as a list of longitudes followed by a 
+    are read as pairs (ie. byrow=TRUE) or as a list of longitudes followed by a
     list of the accompanying latitudes (ie. byrow=FALSE). This value defaults to
     'TRUE'.
   }
