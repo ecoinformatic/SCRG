@@ -45,4 +45,3 @@ end_time <- Sys.time()
 # output_formula <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_form.rds")
 # output_model <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_model.rds")
 # output_OR <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_odds_ratios.rds")
-

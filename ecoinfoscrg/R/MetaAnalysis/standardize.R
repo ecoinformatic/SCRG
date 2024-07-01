@@ -61,9 +61,3 @@ pred <- pred %>%
 
 # Check data
 str(pred)
-
-
-
-
-
-

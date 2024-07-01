@@ -129,5 +129,3 @@ pred <- pred %>%
 # table(tolower(tampa$Exposure), useNA = "ifany")
 # table(tolower(pens$exposure), useNA = "ifany")
 # ############################################################
-
-
