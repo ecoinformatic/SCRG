@@ -10,15 +10,13 @@ Authors@R:
            role = c("aut", "cre")),
         person("Thomas", "Hellinger", "Thomas.Hellinger@ucf.edu",
            middle="Adriaan", role = c("ctb"))
-)
+      )
 Maintainer: UCF Ecoinformatics Lab <George.Zaragosa@ucf.edu>
-Description: Meta-analysis and Living Shoreline Suitability Model for the state 
-     of Florida.
+Description: Meta-analysis and Living Shoreline Suitability Model for the state of Florida.
 License: use_mit_license()
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
-Suggests:
-  testthat (>= 3.0.0)
+Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3

@@ -51,7 +51,6 @@ scrg__get_geometry_in_bbox_pointlist <- function(point_list, sf_object, byrow=TR
   # This function takes a series of points and an sf object, and returns a
   # subset of the sf object that falls within the bounding box formed by the
   # series of points.
-  fucks
   bbox_matrix <- matrix(point_list, ncol=2, byrow=byrow)
   bbox <- st_polygon(list(bbox_matrix))
   return(subset(sf_object, st_within(sf_object, bbox, sparse = FALSE)))
