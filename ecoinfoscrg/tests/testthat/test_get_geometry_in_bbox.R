@@ -11,7 +11,12 @@ test_that("long lat", {
   fl_set <- scrg__get_geometry_in_bbox(
     florida_bbox_vector_lnglat, point_geospatical_obj
   )
-  expect_setequal(fl_set, points_in_florida)
+  # Yeah, we know...and also don't care. Names are not part of the functionality
+  # tested.
+  expect_warning(
+    expect_setequal(fl_set, points_in_florida),
+    "ignores names"
+  )
 })
 
 test_that("test NA", {
