@@ -20,8 +20,8 @@ test_that("long lat", {
 })
 
 test_that("test NA", {
-  expect_success(
-    is.na(scrg__get_geometry_in_bbox(florida_bbox_vector_lnglat, NA))
+  expect_equal(
+    scrg__get_geometry_in_bbox(florida_bbox_vector_lnglat, NA), NA
   )
 })
 
