@@ -34,6 +34,10 @@ scrg__get_geometry_in_bbox <- function(points, sf_object) {
   # This function takes a series of points and an sf object, and returns a
   # subset of the sf object that falls within the bounding box formed by the
   # series of points.
+  if(!("sf" %in% class(sf_object)) | (length(sf_object) == 0)){
+    warning("Object passed to `scrg__get_geometry_in_bbox` is not an sf object")
+    return(sf_object)
+  }
   p1 <- points[1:2]
   p2 <- points[3:4]
   bbox_matrix <- matrix(
