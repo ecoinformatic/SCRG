@@ -7,7 +7,7 @@ test_that("empty dataset", {
 })
 
 test_that("long lat", {
-  sf_use_s2(FALSE)
+  set_s2(FALSE)
   fl_set <- scrg__get_geometry_in_bbox(
     florida_bbox_vector_lnglat, point_geospatical_obj
   )
@@ -19,10 +19,14 @@ test_that("long lat", {
   )
 })
 
-test_that("test NA", {
-  expect_equal(
-    scrg__get_geometry_in_bbox(florida_bbox_vector_lnglat, NA), NA
-  )
+test_that("test all forms of nothing", {
+  for(form_of_nope in c(NaN, NA, NULL)){
+    expect_warning(
+      nothing <- scrg__get_geometry_in_bbox(florida_bbox_vector_lnglat, form_of_nope),
+      "Nothing passed to `scrg__get_geometry_in_bbox`, nothing returned"
+    )
+    expect_equal(nothing, form_of_nope)
+  }
 })
 
 test_that("is character", {
