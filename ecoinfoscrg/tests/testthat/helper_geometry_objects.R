@@ -19,6 +19,8 @@ points_not_in_florida <- st_sf(geometry = st_sfc(
 
 point_geospatical_obj <- rbind(points_in_florida, points_not_in_florida)
 
+notsf_msg <- "Object passed to `scrg__get_geometry_in_bbox` is not an sf object"
+
 set_s2 <- function(env = parent.frame(), s2=FALSE) {
   withr::with_options(list(sf_use_s2=s2), getOption("sf_use_s2"))
 }

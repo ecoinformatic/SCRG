@@ -26,15 +26,21 @@ test_that("test all forms of nothing", {
         florida_bbox_vector_lnglat,
         form_of_nope
       ),
-      "Object passed to `scrg__get_geometry_in_bbox` is not an sf object"
+      notsf_msg
     )
     expect_equal(nothing, form_of_nope)
   }
 })
 
 test_that("is character", {
-  expect_success(is.character(scrg__get_geometry_in_bbox("test"))
+  characters <- "test"
+  expect_warning(
+    get_geometry_result <- scrg__get_geometry_in_bbox(
+      florida_bbox_vector_lnglat,
+      characters
+    )
   )
+  expect_equal(characters, get_geometry_result)
 })
 
 test_that("vectors", {
