@@ -21,6 +21,19 @@ point_geospatical_obj <- rbind(points_in_florida, points_not_in_florida)
 
 notsf_msg <- "Object passed to `scrg__get_geometry_in_bbox` is not an sf object"
 
+# Used in "corner_point", "side_point", and "inside point tests"
+point_on_corner<- st_sf(geometry = st_sfc(
+  st_point(c(-88.088379, 23.301901))
+))
+
+point_on_side<- st_sf(geometry = st_sfc(
+  st_point(c(-83.088379, 23.301901))
+))
+
+point_inside <- st_sf(geometry = st_sfc(
+  st_point(c(-85.088379, 25.301901))
+))
+
 set_s2 <- function(env = parent.frame(), s2=FALSE) {
   withr::with_options(list(sf_use_s2=s2), getOption("sf_use_s2"))
 }
