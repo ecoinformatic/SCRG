@@ -56,9 +56,18 @@ adjusted_cov_matrix <- adjusted_cov_matrix + diag(epsilon, nrow(adjusted_cov_mat
 #####
 
 # Fit the meta-analytic model using rma.mv from the metafor package
+pred$study <- NULL
+pred$SMMv5Def <- NULL
+formula <- as.formula(paste("~", paste(colnames(pred)[-1], collapse = " + ")))
+
+pred_t <- t(pred)
+pred_t <- as.data.frame(pred_t)
+ 
 meta_result <- rma.mv(
   yi = overall_effect,
-  V = adjusted_cov_matrix
+  V = adjusted_cov_matrix,
+  mods = formula,
+  data = pred_t
 )
 
 summary(meta_result)
