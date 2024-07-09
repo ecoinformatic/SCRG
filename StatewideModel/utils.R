@@ -30,8 +30,8 @@ scrg__get_geometry_in_bbox <- function(points, sf_object) {
   # This function takes a series of points and an sf object, and returns a
   # subset of the sf object that falls within the bounding box formed by the
   # series of points.
-  p1 <- points[1]
-  p2 <- points[2]
+  p1 <- points[1:2]
+  p2 <- points[3:4]
   bbox_matrix <- matrix(
     c(p1[1], p1[2], p2[1], p1[2], p2[1], p1[2], p2[1], p2[2], p2[1], p2[2],
       p1[1], p2[2], p1[1], p2[2], p1[1], p1[2]),
@@ -82,7 +82,7 @@ scrg__make_string_distance_diff <- function(x, y, dropMatches=NULL) {
   if(dropMatches){
     return(dists[,x[!(x %in% to_drop)]])
   } else {
-    return(dists)    
+    return(dists)
   }
 }
 
@@ -93,7 +93,7 @@ scrg__multiline_length <- function(multiline_str) {
 }
 
 scrg__venn_set <- function(x, y) {
-  # Making a venn diagram of two vectors to determine what is not in the other 
+  # Making a venn diagram of two vectors to determine what is not in the other
   # vector
   # From: https://stackoverflow.com/a/17599164
   both <- union(x,y)
