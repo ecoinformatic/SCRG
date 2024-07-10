@@ -1,161 +1,115 @@
-library(nnet)
 library(dplyr)
+library(lme4)
 
-# Get models from .rds
-model_paths <- c("MetaAnalysis/Routput/chocTest_final_model.rds",
-                 "MetaAnalysis/Routput/pensTest_final_model.rds",
-                 "MetaAnalysis/Routput/tampaTest_final_model.rds",
-                 "MetaAnalysis/Routput/IRLTest_final_model.rds")
-model_names <- c("choc", "pens", "tampa", "IRL")
+############################
+# GRAB MODEL OUTPUT
+############################
+source("ecoinfoscrg/R/MetaAnalysis/wranglingCleaning.R")
+source("ecoinfoscrg/R/MetaAnalysis/standardize.R")
 
-# Load and prep model data
-prepare_df <- function(model_path, model_name) {
-  model <- readRDS(model_path)
-  coef_df <- as.data.frame(coef(model))
-  coef_df$response_category <- rownames(coef_df)
-  coef_df$model <- model_name
-  return(coef_df)
+chocBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/chocContinuous_average_betas.rds")
+pensBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/pensContinuous_average_betas.rds")
+IRLBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/IRLContinuous_average_betas.rds")
+tampaBetas <- readRDS("ecoinfoscrg/R/MetaAnalysis/Routput/tampaContinuous_average_betas.rds")
+
+# Get predictors (excluding study and definitions)
+numeric_pred <- pred %>%
+  select_if(is.numeric)
+numeric_pred_cols <- colnames(numeric_pred)
+
+# Function to convert model out put to dataframe (only keep "Estimate")
+prepare_df <- function(matrix, source) {
+    df <- as.data.frame(t(matrix))
+    df <- df[1, , drop = FALSE] # Keep "Estimate"
+    colnames(df) <- rownames(matrix)
+    missing_cols <- setdiff(numeric_pred_cols, rownames(matrix)) # missing predictors as NA
+    df[missing_cols] <- NA
+    df <- df[, numeric_pred_cols] # order columns
+    df$study <- source
+    return(df)
 }
 
-# Grab and combine betas
-model_data_frames <- Map(prepare_df, model_paths, model_names)
+chocDF <- prepare_df(chocBetas, "choc")
+pensDF <- prepare_df(pensBetas, "pens")
+tampaDF <- prepare_df(tampaBetas, "tampa")
+IRLDF <- prepare_df(IRLBetas, "IRL")
 
-# Create data frames for each model
-choc_betas <- model_data_frames[[1]]
-pens_betas <- model_data_frames[[2]]
-tampa_betas <- model_data_frames[[3]]
-IRL_betas <- model_data_frames[[4]]
+# Combine all dataframes
+combined_betas <- rbind(chocDF, pensDF, tampaDF, IRLDF)
+combined_betas[] <- lapply(combined_betas, function(x) as.numeric(as.character(x)))
 
-# Combine all individual data frames
-combined_betas <- bind_rows(model_data_frames)
-combined_betas <- combined_betas %>%
-  arrange(response_category, model) # Rearrange/move response to the left 
+# Get column names from pred
+missing_cols <- setdiff(numeric_pred_cols, colnames(combined_betas))
+combined_betas[missing_cols] <- NA
 
-# check
-choc_betas
-pens_betas
-tampa_betas
-IRL_betas
-combined_betas
+############################
+# GENERATE AVERAGES AND REPLACE NA's WITH THEM
+############################
+# Get average for each row ignore NA
+combined_betas[] <- lapply(combined_betas, function(x) as.numeric(as.character(x)))
+row_averages <- apply(combined_betas, 1, function(row) mean(row, na.rm = TRUE))
 
-#######################
-# GET COLUMNS FOR EACH STUDY
-#######################
-# Generate dummy variable names function
-generate_dummy_colnames <- function(base_cols, pred_cols) {
-  dummy_colnames <- pred_cols[grepl(paste(base_cols, collapse = "|"), pred_cols)]
-  return(dummy_colnames)
-}
+choc_avg <- row_averages[1]
+pens_avg <- row_averages[2]
+tampa_avg <- row_averages[3]
+IRL_avg <- row_averages[4]
 
-# Extract "base" (original) column names from dummy variables in `pred`
-base_pred_cols <- unique(sub("_.*", "", colnames(pred)))
-
-# Match study columns to dummy variable format in pred
-match_study_to_pred <- function(study_cols, pred_cols) {
-  base_study_cols <- intersect(study_cols, base_pred_cols)
-  dummy_colnames <- generate_dummy_colnames(base_study_cols, pred_cols)
-  return(dummy_colnames)
-}
-
-# Get dummy variable names for studies
-choc_dcolnames <- match_study_to_pred(colnames(choc), colnames(pred))
-pens_dcolnames <- match_study_to_pred(colnames(pens), colnames(pred))
-tampa_dcolnames <- match_study_to_pred(colnames(tampa), colnames(pred))
-IRL_dcolnames <- match_study_to_pred(colnames(IRL), colnames(pred))
-choc_dcolnames
-pens_dcolnames
-tampa_dcolnames
-IRL_dcolnames
-
-#######################
-# ENSURE STUDY BETAS CONTAIN NECESSARY COLUMNS
-#######################
-# Function to add missing columns as numeric
-add_missing_columns <- function(df, colnames_vec) {
-  missing_cols <- setdiff(colnames_vec, colnames(df))
-  for (col in missing_cols) {
-    df[[col]] <- as.numeric(NA)
-  }
-  return(df)
-}
-
-# Add missing columns to each study's betas dataframe
-choc_betas <- add_missing_columns(choc_betas, choc_dcolnames)
-pens_betas <- add_missing_columns(pens_betas, pens_dcolnames)
-tampa_betas <- add_missing_columns(tampa_betas, tampa_dcolnames)
-IRL_betas <- add_missing_columns(IRL_betas, IRL_dcolnames)
-convert_to_numeric <- function(df) {
-  df[] <- lapply(df, function(col) if(is.logical(col)) as.numeric(col) else col)
-  return(df)
-}
-
-choc_betas <- convert_to_numeric(choc_betas)
-pens_betas <- convert_to_numeric(pens_betas)
-tampa_betas <- convert_to_numeric(tampa_betas)
-IRL_betas <- convert_to_numeric(IRL_betas)
-
-#######################
-# CALCULATE AND FILL STUDY AVERAGES
-#######################
-# Helpful for averaging:
-calculate_study_average <- function(df) {
-  numeric_cols <- df %>%
-    select(-`(Intercept)`, where(is.numeric)) %>%
-    select_if(~ is.numeric(.) && !all(is.na(.))) # make sure they're numeric!!!
-  avg <- mean(unlist(lapply(numeric_cols, as.numeric)), na.rm = TRUE)
-  return(avg)
-}
-
-# Calculate study beta averages
-choc_avg <- calculate_study_average(choc_betas)
-pens_avg <- calculate_study_average(pens_betas)
-tampa_avg <- calculate_study_average(tampa_betas)
-IRL_avg <- calculate_study_average(IRL_betas)
 choc_avg
 pens_avg
 tampa_avg
 IRL_avg
 
-# Fill missing values with the study average
-fill_missing_with_average <- function(df, average) {
-  numeric_cols <- df %>%
-    select(-`(Intercept)`, where(is.numeric))
-  df[names(numeric_cols)] <- lapply(numeric_cols, function(col) {
-    ifelse(is.na(col), average, col)
-  })
-  return(df)
+# Replace NAs
+combined_betas[1, ][is.na(combined_betas[1, ])] <- choc_avg
+combined_betas[2, ][is.na(combined_betas[2, ])] <- pens_avg
+combined_betas[3, ][is.na(combined_betas[3, ])] <- tampa_avg
+combined_betas[4, ][is.na(combined_betas[4, ])] <- IRL_avg
+
+combined_betas$study <- c("choc", "pens", "tampa", "IRL")
+
+# View(combined_betas)
+
+# Remove study columned
+combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
+
+################################
+# SE(for effect size)
+################################
+# Function to convert model out put to dataframe (only keep "Estimate")
+prepare_se_df <- function(matrix, source) {
+    df <- as.data.frame(t(matrix))
+    df <- df[2, , drop = FALSE] # Keep "Estimate"
+    colnames(df) <- rownames(matrix)
+    missing_cols <- setdiff(numeric_pred_cols, rownames(matrix)) # missing predictors as NA
+    df[missing_cols] <- NA
+    df <- df[, numeric_pred_cols] # order columns
+    df$study <- source
+    return(df)
 }
 
-# Relace missing values with averages
-choc_betas <- fill_missing_with_average(choc_betas, choc_avg)
-pens_betas <- fill_missing_with_average(pens_betas, pens_avg)
-tampa_betas <- fill_missing_with_average(tampa_betas, tampa_avg)
-IRL_betas <- fill_missing_with_average(IRL_betas, IRL_avg)
+chocDF_se <- prepare_df(chocBetas, "choc")
+pensDF_se <- prepare_df(pensBetas, "pens")
+tampaDF_se <- prepare_df(tampaBetas, "tampa")
+IRLDF_se <- prepare_df(IRLBetas, "IRL")
 
-# New column for "response_category"
-choc_betas$response_category <- rownames(choc_betas)
-pens_betas$response_category <- rownames(pens_betas)
-tampa_betas$response_category <- rownames(tampa_betas)
-IRL_betas$response_category <- rownames(IRL_betas)
+combined_se <- rbind(chocDF_se, pensDF_se, tampaDF_se, IRLDF_se)
+combined_se[] <- lapply(combined_se, function(x) as.numeric(as.character(x)))
 
-# Remove row names
-rownames(choc_betas) <- NULL
-rownames(pens_betas) <- NULL
-rownames(tampa_betas) <- NULL
-rownames(IRL_betas) <- NULL
+row_averages_se <- apply(combined_se, 1, function(row) mean(row, na.rm = TRUE))
 
-print(head(choc_betas))
-print(head(pens_betas))
-print(head(tampa_betas))
-print(head(IRL_betas))
+choc_avg_se <- row_averages_se[1]
+pens_avg_se <- row_averages_se[2]
+tampa_avg_se <- row_averages_se[3]
+IRL_avg_se <- row_averages_se[4]
 
-######### YOU ARE HERE #########
-# Combine datasets
-combined_betas <- bind_rows(choc_betas, pens_betas, tampa_betas, IRL_betas)
+# Replace NAs
+combined_se[1, ][is.na(combined_se[1, ])] <- choc_avg_se
+combined_se[2, ][is.na(combined_se[2, ])] <- pens_avg_se
+combined_se[3, ][is.na(combined_se[3, ])] <- tampa_avg_se
+combined_se[4, ][is.na(combined_se[4, ])] <- IRL_avg_se
 
-# Ignoring character columns, study column, (Intercept) re and other character columns and intercept
-combined_betas_only <- combined_betas %>%
-  select(-response_category, -model, -study, -`(Intercept)`, where(is.numeric))
-View(combined_betas_only)
+combined_betas$study <- c("choc", "pens", "tampa", "IRL")
+# View(combined_se)
 
-## Note: Both "NA" and "Invalid Number" are present
+# remove study column
+combined_se_only <- combined_se[, !colnames(combined_se) %in% "study"]

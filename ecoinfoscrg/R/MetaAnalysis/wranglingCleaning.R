@@ -2,7 +2,6 @@ rm(list=ls())
 library(metafor)
 library(sf)
 library(dplyr)
-
 # Choctawatchee data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
 choc <- st_transform(st_read("/home/gzaragosa/data/choctawatchee_bay_lssm/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
@@ -43,7 +42,6 @@ choc <- choc[, !(colnames(choc) %in% drop)]
 pens <- pens[, !(colnames(pens) %in% drop)]
 tampa <- tampa[, !(colnames(tampa) %in% drop)]
 IRL <- IRL[, !(colnames(IRL) %in% drop)]
-
 # Columns that can be removed from individual studies 
 # Remove metadata columns and other shapefile stuff
 choc <- choc[, !(colnames(choc) %in% c("DefDate", "Needs_QC", "bmpCountv5", "SMMv5Def"))] # DefDate is just a date of data entry
@@ -78,18 +76,77 @@ IRL$Priority <- as.character(IRL$Priority)
 IRL <- IRL %>% rename(
   Response = Priority
 )
+####################################
+# CONVERT RESPONSE TO CONTINUOUS
+####################################
+library(dplyr)
 
+########## IRL #########
+IRL <- IRL %>% 
+  mutate(Response = as.numeric(case_when(
+    Response %in% c("0", "1") ~ "1",
+    Response %in% c("2", "3") ~ "2",
+    Response %in% c("4", "5") ~ "3",
+    TRUE                       ~ Response  # keeps other values unchanged
+  )))
+
+########## choc #########
+choc <- choc %>%
+  mutate(Response = as.numeric(case_when(
+    Response %in% c("Maintain Beach or Offshore Breakwater with Beach Nourishment",
+                    "Non-Structural Living Shoreline",
+                    "Plant Marsh with Sill", "Existing Marsh Sill", "Existing Breakwater") ~ "3",
+    Response %in% c("Ecological Conflicts. Seek regulatory advice.",
+                    "Highly Modified Area. Seek expert advice.",
+                    "Land Use Management",
+                    "No Action Needed",
+                    "Special Geomorphic Feature. Seek expert advice.") ~ "2",
+    Response %in% c("Groin Field with Beach Nourishment",
+                    "Revetment",
+                    "Revetment/Bulkhead Toe Revetment") ~ "1",
+    TRUE ~ "1"  # NAs to 1
+  )))
+
+########## pens #########
+pens <- pens %>%
+  mutate(Response = as.numeric(case_when(
+    Response %in% c("Maintain Beach or Offshore Breakwater with Beach Nourishment",
+                    "Non-Structural Living Shoreline",
+                    "Plant Marsh with Sill", "Existing Breakwater") ~ "3",
+    Response %in% c("Ecological Conflicts. Seek regulatory advice.",
+                    "Highly Modified Area. Seek expert advice.",
+                    "Land Use Management",
+                    "No Action Needed",
+                    "Special Geomorphic Feature. Seek expert advice.") ~ "2",
+    Response %in% c("Groin Field with Beach Nourishment",
+                    "Revetment",
+                    "Revetment/Bulkhead Toe Revetment Replacement") ~ "1",
+    TRUE ~ "1"  # NAs to 1
+  )))
+
+########## tampa #########
+# tricky case due to <br> and other descriptions in columns
+## see: https://ocean.floridamarine.org/arcgis/rest/services/Projects_FWC/livingShorelineTB/MapServer/0
+tampa <- tampa %>%
+  mutate(Response = case_when(
+    grepl("Maintain Beach OR Offshore Breakwaters with Beach Nourishment|Non-Structural Living Shoreline|Plant Marsh with Sill|Maintain/Enhance/Create Marsh|Restore Riparian Buffer|Option 1|Option 2 or 5", Response) ~ 3,
+    grepl("Ecological Conflicts|Highly Modified Area|Land Use Management|Special Geomorphic|No Action Needed", Response) ~ 2,
+    grepl("Revetment|Groin Field with Beach Nourishment|Option B3 or B4|Option B8 or B9|Option R7 or R8|Option B7|Option R3 or R4|Option 6", Response) ~ 1,
+    TRUE ~ NA_real_  # Ensuring this branch also explicitly returns a numeric type
+  ))
+
+####################################
+# COMBINE DATA
+####################################
 # Add a 'study' column
 choc$study <- 'choc'
 pens$study <- 'pens'
 tampa$study <- 'tampa'
 IRL$study <- 'IRL'
-
 # Combine Data
 state <- dplyr::bind_rows(choc, pens, tampa, IRL) 
 pred <- state %>% 
   select(-"Response") # Remove response variables
-
 ####################################
 # SPELL CHECK
 ####################################
@@ -109,7 +166,6 @@ corrections <- data.frame(
   incorrect = c("YEs", "RIprap", "riprap", "Permament", "Permanenet", "Bulkead", "Bulkhea", "BUlkhead"),
   correct = c("Yes", "Riprap", "Riprap", "Permanent", "Permanent", "Bulkhead", "Bulkhead", "Bulkhead")
 )
-
 pred <- pred %>%
   mutate(across(where(is.character), ~{
     column <- .
@@ -120,12 +176,3 @@ pred <- pred %>%
     }
     column
   }))
-
-
-# ################### UTILS/UNIQUE VALUES ####################
-# # Get observed states for each column:
-# table(tolower(pens$exposure), useNA = "ifany") # Count info
-# table(tolower(choc$MxQExpCode), useNA = "ifany")
-# table(tolower(tampa$Exposure), useNA = "ifany")
-# table(tolower(pens$exposure), useNA = "ifany")
-# ############################################################
