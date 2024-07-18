@@ -20,7 +20,7 @@ pred_IRL <- pred %>% filter(study == "IRL")
 data <- cbind(resp_IRL, pred_IRL) # choc example
 
 # Specify a short name of the model
-name <- "IRLContinuous"
+name <- "probittest"
 ############################
 
 # Grab categorical variables (dummyvars has the separated out names/dummy variables)
@@ -33,14 +33,17 @@ predictors <- c(numerical_vars, dummyvars)
 response_var <- "Response" 
 
 # NEW! 
-resp <- data.frame(Response = state$Response)
+# resp <- data.frame(Response = state$Response)
+resp <- data.frame(Response = factor(state$Response, ordered = TRUE))
+
+
 study <- data.frame(study = state$study)
 input <- cbind(resp, pred)
 input$SMMv5Def <- NULL
 input$study <- as.factor(input$study)
 
-# # Run build-up/pair-down R script
+# # Run build-up/pair-down R scripts
 start_time <- Sys.time()
-source("ecoinfoscrg/R/MetaAnalysis/BUPD.R")
+source("ecoinfoscrg/R/MetaAnalysis/BUPD_nonparallel.R")
 end_time <- Sys.time()
 

@@ -1,15 +1,29 @@
-
 ############################################
 # INITIALIZE
 ############################################
 # library(nnet)
-library(lme4)
+# library(lme4)
+library(MASS)
+# library(ordinal)
+
 # Initial empty model
-# Note that `best_formula` starts with `initial_formula` as baseline
-initial_formula <- as.formula(paste(response_var, "~ 1 + (1|study)"))
+# Note that `best_formula` starts with `initial_formula` as baseline 
+# initial_formula <- as.formula(paste(response_var, "~ 1 + (1|study)"))
+initial_formula <- as.formula(paste(response_var, "~ 1"))
 best_formula <- initial_formula
-# best_model <- multinom(best_formula, data = data, MaxNWts = 5000)
-best_model <- lmer(best_formula, data = input)
+
+# best_model <- multinom(best_formula, data = data, MaxNWts = 5000) #nnet
+# best_model <- lmer(best_formula, data = input) # lme4
+# best_model <- polr(best_formula, data = input, method = "probit") # MASS
+best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
+# control_settings <- clmm.control(maxIter = 2000)  # clmm stuff
+# best_model <- clmm(best_formula, data = input, control = control_settings, link = "probit") # ordinal
+# best_model <- glmer(best_formula, data = input, family=binomial(link="probit"))
+# best_model <- glm(best_formula, data = input, family=binomial(link="probit"))
+# glmer(Response ~ (1 | study) + Beach_1, data = input, family=binomial(link="probit"))
+
+
+
 best_aic <- AIC(best_model)
 name_prefix <- gsub(" ", "_", name) # add underscores
 ############################################
@@ -17,9 +31,18 @@ name_prefix <- gsub(" ", "_", name) # add underscores
 ############################################
 # Function to fit and evaluate models (similar to Chris' only with a multinomial logistic regression for this specific dataset)
 fit_model <- function(formula, data) {
-  model <- lmer(formula, data = data)
-  list(model = model, aic = AIC(model))
+  # model <- lmer(formula, data = data)
+  # model <- clmm(formula, data = data, link = "probit")
+  # model <- polr(formula, data = data, method = "probit")
+  tryCatch({ # NEW LINE
+    model <- polr(formula, data = data, Hess=TRUE, method="probit")
+    aic <- AIC(model) # NEW LINE
+    return(list(model = model, aic = aic, error = NULL))
+  }, error = function(e) { # NEW LINE
+    return(list(model = NULL, aic = Inf, error = e$message))
+  })
 }
+
 # Similar to Chris' only with a multinomial logistic regression (which can be switched out)
 for (i in 1:length(predictors)) {
     current_predictors <- all.vars(best_formula)[-1]
@@ -29,7 +52,12 @@ for (i in 1:length(predictors)) {
     for (predictor in remaining_predictors) {
         new_formula <- update(best_formula, paste(". ~ . +", predictor))
         formula_str <- paste(deparse(new_formula, width.cutoff = 500), collapse = "") # converts model formulat to string. Note that the width.cutoff and collapse are EXTREMELY important or deparse will split your string into two lines by default
-        fit <- fit_model(new_formula, input)        
+        fit <- fit_model(new_formula, input)   
+        if (!is.null(fit$error)) { # NEW LINE
+        # Log error if predictor is bad # NEW LINE
+          cat("Error for predictor", predictor, ":", fit$error, "\n") # NEW LINE
+          next  # Skip to next iteration if errror # NEW LINE
+        } # NEW LINE
         candidate_models[[formula_str]] <- fit$aic # store the new model and AIC in cadidate model list
         print(paste("Testing build-up formula:", formula_str, "with AIC:", fit$aic)) # helpful output
     }
@@ -52,10 +80,13 @@ for (i in 1:length(predictors)) {
         break
     }
 }
+
 #####
 # Final model
 # best_model <- multinom(best_formula, data = data, MaxNWts = 5000, trace = FALSE)
-best_model <- lmer(best_formula, data = input)
+# best_model <- lmer(best_formula, data = input)
+# best_model <- clmm(best_formula, data = input, link = "probit")
+best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
 # summary(best_model)
 ############################################
 # PAIR-DOWN PHASE
@@ -65,7 +96,9 @@ current_formula <- best_formula  # start with best FORMULA from build-up phase
 repeat {
   predictors_in_model <- all.vars(current_formula)[-1]  # get all predictors currently in the best model
   candidate_models <- list() # list to store models and AIC
-  current_model <- lmer(current_formula, data = input)
+  # current_model <- lmer(current_formula, data = input)
+  # current_model <- clmm(current_formula, data = input, link = "probit")
+  current_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
   # current_aic <- AIC(multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)) # calculate AIC of current best model
   current_aic <- AIC(current_model)
   
@@ -100,7 +133,9 @@ repeat {
 }
 # Final pairdown model
 # final_model <- multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)
-final_model <- lmer(current_formula, data = input)
+# final_model <- lmer(current_formula, data = input)
+# final_model <- clmm(current_formula, data = input, link = "probit")
+final_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
 # summary(final_model)
 # final formula
 final_form <- formula(final_model)
