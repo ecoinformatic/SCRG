@@ -7,13 +7,13 @@ library(dplyr)
 choc <- st_transform(st_read("/home/gzaragosa/data/choctawatchee_bay_lssm/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
 # Pensacola data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-pens <- st_transform(st_read("/home/gzaragosa/data/pensacola_lssm/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
+pens <- st_transform(st_read("../../../Data/join_layersr/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
 # Tampa data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-tampa <- st_transform(st_read("/home/gzaragosa/data/Tampa_Bay_Living_Shoreline_Suitability_Model_Results/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) # Response: 
+tampa <- st_transform(st_read("../../../Data/join_layersr/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) # Response: 
 
 # IRL data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-IRL <- st_transform(st_read("/home/gzaragosa/data/Final NIRL Shapefile_all data/Final Shapefile_all data/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp"), crs = 6346)
+IRL <- st_transform(st_read("../../../Data/join_layersr/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp"), crs = 6346)
 
 # colnames(choc)
 # colnames(pens)

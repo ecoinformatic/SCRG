@@ -16,16 +16,16 @@ library(sf)
 library(dplyr)
 
 # Choctawatchee data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-choc <- st_transform(st_read("/home/gzaragosa/data/choctawatchee_bay_lssm/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
+choc <- st_transform(st_read("../../../Data/join_layersr/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
 # Pensacola data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-pens <- st_transform(st_read("/home/gzaragosa/data/pensacola_lssm/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
+pens <- st_transform(st_read("../../../Data/join_layersr/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
 # Tampa data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-tampa <- st_transform(st_read("/home/gzaragosa/data/Tampa_Bay_Living_Shoreline_Suitability_Model_Results/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) # Response: 
+tampa <- st_transform(st_read("../../../Data/join_layersr/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) # Response: 
 
 # IRL data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-IRL <- st_transform(st_read("/home/gzaragosa/data/Final NIRL Shapefile_all data/Final Shapefile_all data/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp"), crs = 6346)
+IRL <- st_transform(st_read("../../../Data/join_layersr/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp"), crs = 6346)
 
 # colnames(choc)
 # colnames(pens)
@@ -270,9 +270,9 @@ start_time <- Sys.time()
 source("MetaAnalysis/BUPD.R")
 end_time <- Sys.time()
 
-# output_formula <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_form.rds")
-# output_model <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_final_model.rds")
-# output_OR <- readRDS("/home/gzaragosa/Documents/SCRG/MetaAnalysis/Routput/chocTest_odds_ratios.rds")
+# output_formula <- readRDS("../../../Data/Routput/chocTest_final_form.rds")
+# output_model <- readRDS("../../../Data/Routput/chocTest_final_model.rds")
+# output_OR <- readRDS("../../../Data/Routput/chocTest_odds_ratios.rds")
 ```
 
 ### Build-Up, Pair-Down Model Selection Script (`BUPD`)

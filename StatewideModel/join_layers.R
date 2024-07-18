@@ -3,9 +3,9 @@ library(sf)
 library(raster)
 
 ##### GRAB LSSM DATA (All in WGS84) #####
-Tampa_LSSM <- st_transform(st_read("/home/gzaragosa/data/Tampa_Bay_Living_Shoreline_Suitability_Model_Results/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) #BMPallSMM
-Choc_LSSM <- st_transform(st_read("/home/gzaragosa/data/choctawatchee_bay_lssm/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # SMMv5Class
-Pens_LSSM <- st_transform(st_read("/home/gzaragosa/data/pensacola_lssm/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # SMMv5Class
+Tampa_LSSM <- st_transform(st_read("../Data/join_layersr/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) #BMPallSMM
+Choc_LSSM <- st_transform(st_read("../Data/join_layersr/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # SMMv5Class
+Pens_LSSM <- st_transform(st_read("../Data/join_layersr/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # SMMv5Class
 IRL_LSSM <- st_transform(st_read("/home/gzaragosa/data/UCF_living_shoreline/Shoreline_Characterization_N_IRL/Shoreline_Characterization_N_IRL_POINTS_111m.shp"), crs = 6346) # Priority
 
 #####
@@ -30,7 +30,7 @@ WC_precip <- raster("/home/gzaragosa/data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_
 # WC_precip <- projectRaster(WC_precip, crs = CRS("EPSG:6346"))
 
 # Mangrove Above Ground Biomass (Raster)
-# mangrove_abv <- raster("/home/gzaragosa/data/Global Mangrove Distribution/Mangrove_agb_UnitedStates.tif")
+# mangrove_abv <- raster("../Data/Mangrove_Above_Ground_Biomass/Mangrove_agb_UnitedStates.tif")
 
 
 ##### GRAB SHAPEFILE DATA #####
@@ -39,7 +39,7 @@ seagrass <- st_transform(st_read("/home/gzaragosa/data/SIMM/Seagrass_Habitat_in_
 seagrass = seagrass[, c("SEAGRASS")] # States: Continuous, Discontinuous
 
 # NOAA Mangrove Habitat Shapefile
-mangrove <- st_transform(st_read("/home/gzaragosa/data/NOAA/Biotic/Mangrove Communities/Mangrove_Habitat_in_Florida/Mangrove_Habitat_in_Florida.shp"), crs = 6346)
+mangrove <- st_transform(st_read("../Data/NOAA_data/Mangrove_Habitat_in_Florida.shp"), crs = 6346)
 mangrove = mangrove[, c("DESCRIPT")] # States: Mangrove Swamp
 
 # NOAA Wetlands Data - NAD_1983_Albers, EPSG 5070?
@@ -47,7 +47,7 @@ wetlands <- st_transform(st_read("/home/gzaragosa/data/NOAA/Biotic/Wetlands/FL_s
 wetlands = wetlands[, c("WETLAND_TY")] # States: Estuarine and Marine Deepwater, Estuarine and Marine Wetland, Lake, Freshwater Pond, Freshwater Emergent Wetland, Freshwater Forested/Shrub Wetland, Riverine, Other
 
 # Bathymetry Data Countours
-# bath_con <- st_read("/home/gzaragosa/data/Bathymetry Data (FWC)/Bathymetry_Contours_Southeast_United_States/Bathymetry_Contours_Southeast_United_States.shp")
+# bath_con <- st_read("../Data/Bathymetry/Bathymetry_Contours_Southeast_United_States.shp")
 # Need to get additional contour data for the NW edge of the state
 
 # FL Land Use and Land Cover Data - NAD83(2011) / Florida GDL Albers, EPSG 6439
@@ -55,7 +55,7 @@ FL_LULC <- st_transform(st_read("/home/gzaragosa/data/Statewide_Land_Use_Land_Co
 FL_LULC = FL_LULC[, c("LANDUSE_DE")] # States: Many Land Use Descriptions
 
 # IBTrACS Hurrican Data
-hurricane <- st_transform(st_read("/home/gzaragosa/data/IBTrACS/North Atlantic/IBTrACS.NA.list.v04r00.lines/IBTrACS.NA.list.v04r00.lines.shp"), crs = 6346)
+hurricane <- st_transform(st_read("../Data/IBTrACS/IBTrACS.NA.list.v04r00.lines.shp"), crs = 6346)
 hurricane = hurricane[, c("WMO_WIND")]
 
 
