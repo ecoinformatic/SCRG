@@ -17,16 +17,16 @@ IRL_LSSM = IRL_LSSM[, c("Priority")]
 
 ##### GRAB RASTER DATA #####
 # WorldClim Data
-WC_wind <- raster("/home/gzaragosa/data/WorldClim/wc2.1_30s_wind/wc2.1_30s_wind_01.tif")
+WC_wind <- raster("../Data/WorldClim/wc2.1_30s_wind/wc2.1_30s_wind_01.tif")
 # WC_wind <- projectRaster(WC_wind, crs = CRS("EPSG:6346"))
 
-WC_elev <- raster("/home/gzaragosa/data/WorldClim/wc2.1_30s_elev/wc2.1_30s_elev.tif")
+WC_elev <- raster("../Data/WorldClim/wc2.1_30s_elev/wc2.1_30s_elev.tif")
 # WC_elev <- projectRaster(WC_elev, crs = CRS("EPSG:6346"))
 
-WC_temp <- raster("/home/gzaragosa/data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_1.tif") # Mean Temp (BIO1)
+WC_temp <- raster("../Data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_1.tif") # Mean Temp (BIO1)
 # WC_temp <- projectRaster(WC_temp, crs = CRS("EPSG:6346"))
 
-WC_precip <- raster("/home/gzaragosa/data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_12.tif") # Annual Precipitation (BIO12)
+WC_precip <- raster("../Data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_12.tif") # Annual Precipitation (BIO12)
 # WC_precip <- projectRaster(WC_precip, crs = CRS("EPSG:6346"))
 
 # Mangrove Above Ground Biomass (Raster)
@@ -35,7 +35,7 @@ WC_precip <- raster("/home/gzaragosa/data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_
 
 ##### GRAB SHAPEFILE DATA #####
 # Seagrass Integrated Mapping and Monitoring
-seagrass <- st_transform(st_read("/home/gzaragosa/data/SIMM/Seagrass_Habitat_in_Florida.shp"), crs = 6346)
+seagrass <- st_transform(st_read("../Data/SIMM/Seagrass_Habitat_in_Florida.shp"), crs = 6346)
 seagrass = seagrass[, c("SEAGRASS")] # States: Continuous, Discontinuous
 
 # NOAA Mangrove Habitat Shapefile
@@ -43,7 +43,7 @@ mangrove <- st_transform(st_read("../Data/NOAA_data/Mangrove_Habitat_in_Florida.
 mangrove = mangrove[, c("DESCRIPT")] # States: Mangrove Swamp
 
 # NOAA Wetlands Data - NAD_1983_Albers, EPSG 5070?
-wetlands <- st_transform(st_read("/home/gzaragosa/data/NOAA/Biotic/Wetlands/FL_shapefile_wetlands/FL_Wetlands.shp"), crs = 6346)
+wetlands <- st_transform(st_read("../Data/NOAA/Biotic/Wetlands/FL_shapefile_wetlands/FL_Wetlands.shp"), crs = 6346)
 wetlands = wetlands[, c("WETLAND_TY")] # States: Estuarine and Marine Deepwater, Estuarine and Marine Wetland, Lake, Freshwater Pond, Freshwater Emergent Wetland, Freshwater Forested/Shrub Wetland, Riverine, Other
 
 # Bathymetry Data Countours
@@ -51,7 +51,7 @@ wetlands = wetlands[, c("WETLAND_TY")] # States: Estuarine and Marine Deepwater,
 # Need to get additional contour data for the NW edge of the state
 
 # FL Land Use and Land Cover Data - NAD83(2011) / Florida GDL Albers, EPSG 6439
-FL_LULC <- st_transform(st_read("/home/gzaragosa/data/Statewide_Land_Use_Land_Cover/Statewide_Land_Use_Land_Cover.shp"), crs = 6346)
+FL_LULC <- st_transform(st_read("../Data/Statewide_Land_Use_Land_Cover/Statewide_Land_Use_Land_Cover.shp"), crs = 6346)
 FL_LULC = FL_LULC[, c("LANDUSE_DE")] # States: Many Land Use Descriptions
 
 # IBTrACS Hurrican Data
@@ -75,4 +75,4 @@ IRL_LSSM <- st_join(IRL_LSSM, FL_LULC, left = TRUE, join = st_intersects)
 IRL_LSSM <- st_join(IRL_LSSM, hurricane, left = TRUE, join = st_intersects)
 
 # Save (need to check output projection)
-st_write(IRL_LSSM, "/home/gzaragosa/data/Created/IRL_LSSM.shp", delete_layer = FALSE) 
+st_write(IRL_LSSM, "..Data/Created/IRL_LSSM.shp", delete_layer = FALSE)

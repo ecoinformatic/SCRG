@@ -4,7 +4,7 @@ library(sf)
 library(dplyr)
 
 # Choctawatchee data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-choc <- st_transform(st_read("/home/gzaragosa/data/choctawatchee_bay_lssm/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
+choc <- st_transform(st_read("../../../Data/choctawatchee_bay_lssm/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
 # Pensacola data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
 pens <- st_transform(st_read("../../../Data/join_layersr/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class

@@ -1,0 +1,7 @@
+Data/WorldClim/wc2.1_30s_wind/wc2.1_30s_wind_01.tif filter=lfs diff=lfs merge=lfs -text
+Data/WorldClim/wc2.1_30s_elev/wc2.1_30s_elev.tif filter=lfs diff=lfs merge=lfs -text
+Data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_1.tif filter=lfs diff=lfs merge=lfs -text
+Data/WorldClim/wc2.1_30s_bio/wc2.1_30s_bio_12.tif filter=lfs diff=lfs merge=lfs -text
+Data/SIMM/Seagrass_Habitat_in_Florida.shp filter=lfs diff=lfs merge=lfs -text
+Data/NOAA/Biotic/Wetlands/FL_shapefile_wetlands/FL_Wetlands.shp filter=lfs diff=lfs merge=lfs -text
+
