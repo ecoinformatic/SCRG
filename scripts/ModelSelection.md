@@ -494,4 +494,7 @@ placeholder
 ```
 
 ### Output
-Output of the model selection script can be found in the `output` folder.
+Output of the model selection script can be found in the `output` folder and includes the following:
+* `*_final_model.rds`: general model output
+* `*_final_form.rds`: text formula of best model
+* `_odds_ratios.rds`: can be used as effect sizes in downstream meta-analytic regression (e.g. in `metafor`)
