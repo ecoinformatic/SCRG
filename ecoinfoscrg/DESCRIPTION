@@ -2,9 +2,18 @@ Package: ecoinfoscrg
 Type: Package
 Title: Living Shoreline Suitability Model for Florida 
 Version: 0.1.0
-Author: George Zaragosa, Thomas Adriaan Hellinger
+Authors@R: c(
+    person("Christen", "Fleming", "Christen.Fleming@ucf.edu",
+       role = c("aut", "cph")),
+    person("George", "Zaragosa", , "George.Zaragosa@ucf.edu",
+       role = c("aut", "cre")),
+    person("Thomas", "Hellinger", "Thomas.Hellinger@ucf.edu",
+       middle="Adriaan", role = c("ctb")),
+    person("Bruno", "Pinheiro", "Bruno.Pinheiro@ucf.edu",
+       role = c("ctb")))
 Maintainer: UCF Ecoinformatics Lab <George.Zaragosa@ucf.edu>
 Description: Meta-analysis and Living Shoreline Suitability Model for the state of Florida.
 License: None
 Encoding: UTF-8
 LazyData: true
+Imports: dplyr, metafor, Matrix, sf, stringdist, nnet, testthat, devtools
