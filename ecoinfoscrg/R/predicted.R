@@ -21,7 +21,7 @@ expected_outcome <- as.matrix(predictor_data) %*% average_betas_vector
 # print(expected_outcome)
 
 ############### TESTING #############
-coo_state <- c("OBJECTID", "ID", "geometry", "feature_x", "feature_y", "nearest_x", "nearest_y", "shape__len", "Shape__Len", "distance", "distance_2", "n", "x", "y", "X", "Y")
+coo <- c("OBJECTID", "ID", "geometry", "feature_x", "feature_y", "nearest_x", "nearest_y", "shape__len", "Shape__Len", "distance", "distance_2", "n", "x", "y", "X", "Y")
 state$predicted <- expected_outcome
 
 ##### TAMPA #####
