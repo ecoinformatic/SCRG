@@ -126,3 +126,4 @@ combined_betas$study <- c("choc", "pens", "tampa", "IRL")
 
 # remove study column
 combined_se_only <- combined_se[, !colnames(combined_se) %in% "study"]
+

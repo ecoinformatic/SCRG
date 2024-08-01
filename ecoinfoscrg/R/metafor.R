@@ -71,12 +71,18 @@ predictor = rep(colnames(combined_betas_only), times = length(study_labels))
 variance <- diag(cov_matrix)
 
 # run metafor meta-analytic regression
+# Y_i ~ mu + RE_i + E_i 
 result <- rma.mv(
-  yi = beta, # Vector of all beta coefficients (may need effect size e.g. odds ratios from BUPD.R output instead)
-  V = variance, # vector of length k with the corresponding sampling variances or a k x k variance-covariance matrix of the sampling errors
+  yi = beta, # Vector of all beta coefficients (may need effect size e.g. odds ratios from BUPD.R output instead of scaled betas here)
+  V = variance, # CHECK THIS!!! vector of length k with the corresponding sampling variances or a k x k variance-covariance matrix of the sampling errors
   method = "REML", # default
   random = ~ 1 | study, # Random effects for studies
   mods = ~ 0 + predictor # Including predictors as fixed effects without an intercept (AKA is predictors in formula)
 )
 
 summary(result)
+
+# sink("output/metafor_summary_output.txt")
+# options(width = 200)
+# summary(result)
+# sink()
