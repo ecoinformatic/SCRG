@@ -29,6 +29,7 @@ rm(list=ls())
 library(sf)
 library(dplyr)
 
+setwd('.')
 # Choctawatchee data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
 choc <- st_transform(st_read("Data/choctawatchee_bay/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 

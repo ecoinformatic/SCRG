@@ -3,13 +3,13 @@ library(dplyr)
 ############################
 # GRAB MODEL OUTPUT
 ############################
-source("scripts/wranglingCleaning.R")
-source("scripts/standardize.R")
+source("../scripts/wranglingCleaning.R")
+source("../scripts/standardize.R")
 
-chocBetas <- readRDS("output/chocContinuous_average_betas.rds")
-pensBetas <- readRDS("output/pensContinuous_average_betas.rds")
-IRLBetas <- readRDS("output/IRLContinuous_average_betas.rds")
-tampaBetas <- readRDS("output/tampaContinuous_average_betas.rds")
+chocBetas <- readRDS("../output/chocContinuous_average_betas.rds")
+pensBetas <- readRDS("../output/pensContinuous_average_betas.rds")
+IRLBetas <- readRDS("../output/IRLContinuous_average_betas.rds")
+tampaBetas <- readRDS("../output/tampaContinuous_average_betas.rds")
 
 # Get predictors (excluding study and definitions)
 numeric_pred <- pred %>%

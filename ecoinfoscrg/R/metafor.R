@@ -1,14 +1,14 @@
 library(metafor)
 library(Matrix)
 
-source("ecoinfoscrg/R/getBetas.R")
-source("ecoinfoscrg/R/varCov.R")
+source("R/getBetas.R")
+source("R/varCov.R")
 
 # Model output for each study can be found here:
-chocBetas <- readRDS("output/chocContinuous_average_betas.rds")
-pensBetas <- readRDS("output/pensContinuous_average_betas.rds")
-IRLBetas <- readRDS("output/IRLContinuous_average_betas.rds")
-tampaBetas <- readRDS("output/tampaContinuous_average_betas.rds")
+chocBetas <- readRDS("../output/chocContinuous_average_betas.rds")
+pensBetas <- readRDS("../output/pensContinuous_average_betas.rds")
+IRLBetas <- readRDS("../output/IRLContinuous_average_betas.rds")
+tampaBetas <- readRDS("../output/tampaContinuous_average_betas.rds")
 
 ###############
 # Define predictor columns
@@ -77,6 +77,6 @@ result <- rma.mv(
   method = "REML", # default
   random = ~ 1 | study, # Random effects for studies
   mods = ~ 0 + predictor # Including predictors as fixed effects without an intercept (AKA is predictors in formula)
-) 
+)
 
 summary(result)

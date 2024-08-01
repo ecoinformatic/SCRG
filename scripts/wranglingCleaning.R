@@ -3,16 +3,16 @@ library(sf)
 library(dplyr)
 
 # Choctawatchee data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-choc <- st_transform(st_read("Data/choctawatchee_bay/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
+choc <- st_transform(st_read("../Data/choctawatchee_bay/choctawatchee_bay_lssm_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
 # Pensacola data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-pens <- st_transform(st_read("Data/santa_rosa_bay/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
+pens <- st_transform(st_read("../Data/santa_rosa_bay/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp"), crs = 6346) # Reponse: SMMv5Class
 
 # Tampa data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-tampa <- st_transform(st_read("Data/tampa_bay/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) # Response: 
+tampa <- st_transform(st_read("../Data/tampa_bay/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp"), crs = 6346) # Response:
 
 # IRL data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
-IRL <- st_transform(st_read("Data/indian_river_lagoon/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp"), crs = 6346)
+IRL <- st_transform(st_read("../Data/indian_river_lagoon/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp"), crs = 6346)
 
 ####################################
 # RESPONSE VARIABLES
@@ -33,7 +33,7 @@ choc <- choc[, !(colnames(choc) %in% drop)]
 pens <- pens[, !(colnames(pens) %in% drop)]
 tampa <- tampa[, !(colnames(tampa) %in% drop)]
 IRL <- IRL[, !(colnames(IRL) %in% drop)]
-# Columns that can be removed from individual studies 
+# Columns that can be removed from individual studies
 # Remove metadata columns and other shapefile stuff
 choc <- choc[, !(colnames(choc) %in% c("DefDate", "Needs_QC", "bmpCountv5", "SMMv5Def"))] # DefDate is just a date of data entry
 pens <- pens[, !(colnames(pens) %in% c("Additional", "Permitting"))] # "Additional" and "Permitting" are links in the pens data
@@ -73,7 +73,7 @@ IRL <- IRL %>% rename(
 library(dplyr)
 
 ########## IRL #########
-IRL <- IRL %>% 
+IRL <- IRL %>%
   mutate(Response = as.numeric(case_when(
     Response %in% c("0", "1") ~ "1",
     Response %in% c("2", "3") ~ "2",
@@ -135,8 +135,8 @@ pens$study <- 'pens'
 tampa$study <- 'tampa'
 IRL$study <- 'IRL'
 # Combine Data
-state <- dplyr::bind_rows(choc, pens, tampa, IRL) 
-pred <- state %>% 
+state <- dplyr::bind_rows(choc, pens, tampa, IRL)
+pred <- state %>%
   select(-"Response") # Remove response variables
 ####################################
 # SPELL CHECK
