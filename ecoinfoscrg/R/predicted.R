@@ -30,7 +30,7 @@ tampa <- st_transform(st_read("../Data/tampa_bay/Tampa_Bay_Living_Shoreline_Suit
 tampa_available_columns <- coo[coo %in% colnames(tampa)]
 tampa_coo <- tampa %>% select(all_of(tampa_available_columns))
 tampa_predicted <- cbind(tampa_coo, tampa_test)
-write.csv(tampa_predicted, "output/tampa_predicted.csv", row.names = FALSE)
+write.csv(tampa_predicted, "../output/tampa_predicted.csv", row.names = FALSE)
 
 ##### CHOC #####
 choc_test <- subset(state, study == "choc")
