@@ -58,7 +58,7 @@ IRL_predicted$feature_x <- IRL$feature_x
 IRL_predicted$feature_y <- IRL$feature_y
 # note that coordinates need to be adjusted at some point before mapping (either in R or GIS)
 ## note that exports at Florida 17N
-write.csv(IRL_predicted, "../output/Final Shapefile_all data/IRL_predicted.csv", row.names = FALSE)
+write.csv(IRL_predicted, "../output/Final_Shapefile_all_data/IRL_predicted.csv", row.names = FALSE)
 
 # ##### LSSM4 #####
 # # All 4 LSSMs together
