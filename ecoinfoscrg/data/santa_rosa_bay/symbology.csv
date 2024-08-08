@@ -1,0 +1,14 @@
+Name, Hex Code, Color Name, Line 
+Existing Breakwater, #005CE6, Azul, solid-dashed
+Existing Marsh Still, #267300, Tree green, solid
+Revetment, #00A9E6, Water blue, solid
+Groin Field with Beach Nourishment,#FFAA00,Yelowish orange, solid
+Maintain Beach or Offshore Breakwater with Beach Nourishment,#FFFF00,Yellow, solid
+Plant Marsh with Sill, #4CE600, Vibrant Green, solid
+Non-Structural Living Shoreline, #A8A800, Puke, solid
+No Action Needed, #38A800, Apple, solid
+Special Geomorphic Feature. Seek expert advice.,  #4CE600, Vibrant green, dash-dot
+Ecological Conflicts. Seek regulatory advice., #C500FF, Bright purple, dashed
+Highly Modified Area. Seek expert advice., #E60000, Red, dashed
+Land Use Management. Seek expert advice., #8400A8, Barney, dashed
+others, #828282, Medium gray, solid

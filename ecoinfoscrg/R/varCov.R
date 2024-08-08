@@ -1,5 +1,5 @@
 # Generate covariance matrix
-cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs")
+cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs") # calculates the correlation between each pair of variables using all complete pairs of observations for those variables
 
 # Find where there's missing values
 missing_values <- is.na(cov_matrix)
