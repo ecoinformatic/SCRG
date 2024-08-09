@@ -78,7 +78,7 @@ meta_regression <- function(
   study = NULL, 
   method = "REML", 
   struct = "UN", 
-  verbose = TRUE
+  verbose = FALSE
 ) {
   if (is.null(beta)) beta <- get("beta", envir = .GlobalEnv) # default option
   if (is.null(variance)) variance <- get("variance", envir = .GlobalEnv) # default option
@@ -94,12 +94,26 @@ meta_regression <- function(
     mods = ~ predictor, # Including predictors as fixed effects
     verbose = verbose   # Verbosity of the output
   )
+  
+  return(result)
 }
 
-# print(meta_regression)
+# output <- meta_regression()
+# print(output)
+
+# png("forest_plot.png")
+# forest(output)  # effect sizes and CIs
+# dev.off()
+
+# png("funnel_plot.png")
+# funnel(output) # pub bias
+# dev.off()
 
 
 
+#########################################
+# SANDBOX
+#########################################
 # run metafor meta-analytic regression
 # Y_i ~ mu + RE_i + E_i 
 # WORKING, INTERPRETABLE
