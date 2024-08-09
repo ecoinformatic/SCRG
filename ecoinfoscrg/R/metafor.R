@@ -5,10 +5,10 @@ source("R/getBetas.R")
 source("R/varCov.R")
 
 # Model output for each study can be found here:
-chocBetas <- readRDS("../output/chocContinuous_average_betas.rds")
-pensBetas <- readRDS("../output/pensContinuous_average_betas.rds")
-IRLBetas <- readRDS("../output/IRLContinuous_average_betas.rds")
-tampaBetas <- readRDS("../output/tampaContinuous_average_betas.rds")
+chocBetas <- readRDS("data/choctawatchee_bay/chocContinuous_average_betas.rds")
+pensBetas <- readRDS("data/santa_rosa_bay/pensContinuous_average_betas.rds")
+IRLBetas <- readRDS("data/indian_river_lagoon/IRLContinuous_average_betas.rds")
+tampaBetas <- readRDS("data/tampa_bay/tampaContinuous_average_betas.rds")
 
 ###############
 # Define predictor columns
@@ -44,7 +44,7 @@ adjusted_cov_matrix <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenve
 
 # another check
 smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
-smallest_eigenvalue
+# smallest_eigenvalue
 
 #####
 # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
@@ -70,17 +70,46 @@ study = factor(study_vector)
 predictor = rep(colnames(combined_betas_only), times = length(study_labels))
 variance <- diag(cov_matrix)
 
+# FUNCTION FOR CALLING rma.mv (# `meta_regression` will run with default options )
+meta_regression <- function(
+  beta = NULL, 
+  variance = NULL, 
+  predictor = NULL, 
+  study = NULL, 
+  method = "REML", 
+  struct = "UN", 
+  verbose = TRUE
+) {
+  if (is.null(beta)) beta <- get("beta", envir = .GlobalEnv) # default option
+  if (is.null(variance)) variance <- get("variance", envir = .GlobalEnv) # default option
+  if (is.null(predictor)) predictor <- get("predictor", envir = .GlobalEnv) # default option
+  if (is.null(study)) study <- get("study", envir = .GlobalEnv) # default option
+  
+  result <- rma.mv(
+    yi = beta,          # Vector of all beta coefficients
+    V = variance,       # Vector of sampling variances or variance-covariance matrix
+    method = method,    # Method for the meta-analysis
+    random = ~ 1 | study,  # Random effects for studies
+    struct = struct,    # Structure of the variance-covariance matrix
+    mods = ~ predictor, # Including predictors as fixed effects
+    verbose = verbose   # Verbosity of the output
+  )
+}
+
+# print(meta_regression)
+
+
+
 # run metafor meta-analytic regression
 # Y_i ~ mu + RE_i + E_i 
 # WORKING, INTERPRETABLE
-result <- rma.mv(
-  yi = beta, # Vector of all beta coefficients (may need effect size e.g. odds ratios from BUPD.R output instead of scaled betas here)
-  V = variance, # CHECK AND INPROVE THIS!!! vector of length k with the corresponding sampling variances or a k x k variance-covariance matrix of the sampling errors.
-  method = "REML", # default
-  random = ~ 1 | study, # Random effects for studies
-  struct =  "UN", # unstructured varcov matrix
-  mods = ~ predictor, # Including predictors as fixed effects without an intercept (AKA is predictors in formula)
-  verbose = TRUE
-)
-
-summary(result)
+# result <- rma.mv(
+#   yi = beta, # Vector of all beta coefficients (may need effect size e.g. odds ratios from BUPD.R output instead of scaled betas here)
+#   V = variance, # CHECK AND INPROVE THIS!!! vector of length k with the corresponding sampling variances or a k x k variance-covariance matrix of the sampling errors.
+#   method = "REML", # default
+#   random = ~ 1 | study, # Random effects for studies
+#   struct =  "UN", # unstructured varcov matrix
+#   mods = ~ predictor, # Including predictors as fixed effects without an intercept (AKA is predictors in formula)
+#   verbose = TRUE
+# )
+# summary(result)
