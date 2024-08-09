@@ -3,13 +3,13 @@ library(dplyr)
 ############################
 # GRAB MODEL OUTPUT
 ############################
-source("../scripts/wranglingCleaning.R")
-source("../scripts/standardize.R")
+source("inst/scripts/wranglingCleaning.R")
+source("inst/scripts/standardize.R")
 
-chocBetas <- readRDS("../output/chocContinuous_average_betas.rds")
-pensBetas <- readRDS("../output/pensContinuous_average_betas.rds")
-IRLBetas <- readRDS("../output/IRLContinuous_average_betas.rds")
-tampaBetas <- readRDS("../output/tampaContinuous_average_betas.rds")
+chocBetas <- readRDS("data/choctawatchee_bay/chocContinuous_average_betas.rds")
+pensBetas <- readRDS("data/santa_rosa_bay/pensContinuous_average_betas.rds")
+IRLBetas <- readRDS("data/indian_river_lagoon/IRLContinuous_average_betas.rds")
+tampaBetas <- readRDS("data/tampa_bay/tampaContinuous_average_betas.rds")
 
 # Get predictors (excluding study and definitions)
 numeric_pred <- pred %>%
@@ -54,10 +54,10 @@ pens_avg <- row_averages[2]
 tampa_avg <- row_averages[3]
 IRL_avg <- row_averages[4]
 
-choc_avg
-pens_avg
-tampa_avg
-IRL_avg
+# choc_avg
+# pens_avg
+# tampa_avg
+# IRL_avg
 
 # Replace NAs
 combined_betas[1, ][is.na(combined_betas[1, ])] <- choc_avg
@@ -126,4 +126,6 @@ combined_betas$study <- c("choc", "pens", "tampa", "IRL")
 
 # remove study column
 combined_se_only <- combined_se[, !colnames(combined_se) %in% "study"]
+
+
 
