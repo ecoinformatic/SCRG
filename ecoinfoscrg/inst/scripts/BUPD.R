@@ -3,6 +3,7 @@
 ############################################
 library(parallel)
 library(MASS)
+numCores <- detectCores() - 1
 
 # Initial empty model
 initial_formula <- as.formula(paste(response_var, "~ 1"))
