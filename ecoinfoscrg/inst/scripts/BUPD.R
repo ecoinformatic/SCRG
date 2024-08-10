@@ -1,97 +1,136 @@
-# Note: GPT-4o helped subset and parallelize the original version of this script
-## Generally looks ok but may want to carefully check later since not much checks/output
-## Need to update with ordinal probit regression
-# library(lme4)
+############################################
+# INITIALIZE
+############################################
 library(parallel)
-library(doParallel)
 library(MASS)
-name_prefix <- gsub(" ", "_", name)
 
-# Setup parallel backend to use multiple cores
-cl <- makeCluster(detectCores() - 1)
-registerDoParallel(cl)
+# Initial empty model
+initial_formula <- as.formula(paste(response_var, "~ 1"))
+best_formula <- initial_formula
 
-# Ensure all necessary packages are loaded on each worker node
-clusterEvalQ(cl, {
-    library(lme4)
-    library(MASS)
-})
+best_model <- polr(best_formula, data = input, Hess = FALSE, method = "probit")
+best_aic <- AIC(best_model)
+name_prefix <- gsub(" ", "_", name) # add underscores
 
-# Subset
-subsets <- split(input, sample(1:4, nrow(input), replace = TRUE))
-# Function to apply model building phases on a subset of data
-process_subset <- function(subset_data, response_var, predictors) {
-    initial_formula <- reformulate(c("1"), response = response_var)
-    # best_model <- lmer(initial_formula, data = subset_data)
-    best_model <- polr(initial_formula, data = subset_data, Hess=TRUE, method="probit")
-    best_aic <- AIC(best_model)
-    
-    # Build-Up Phase
-    for (predictor in predictors) {
-        new_formula <- update(initial_formula, paste(". ~ . +", predictor))
-        # model <- lmer(new_formula, data = subset_data)
-        model <- polr(new_formula, data = subset_data, Hess=TRUE, method="probit")
-        current_aic <- AIC(model)
-        if (current_aic < best_aic) {
-            initial_formula <- new_formula
-            best_model <- model
-            best_aic <- current_aic
-        }
-    }
-    # Pair-Down Phase
-    while (length(all.vars(initial_formula)[-1]) > 0) {
-        current_aic <- best_aic
-        improvements <- FALSE
-        predictors_in_model <- all.vars(initial_formula)[-1]
-        for (predictor in predictors_in_model) {
-            reduced_formula <- update(initial_formula, paste(". ~ . -", predictor))
-            # model <- lmer(reduced_formula, data = subset_data)
-            model <- polr(reduced_formula, data = subset_data, Hess=TRUE, method="probit")
-            reduced_aic <- AIC(model)
-            if (reduced_aic < current_aic) {
-                initial_formula <- reduced_formula
-                best_model <- model
-                best_aic <- reduced_aic
-                improvements <- TRUE
-            }
-        }
-        if (!improvements) break
-    }
-    return(coef(summary(best_model)))
+############################################
+# BUILD-UP PHASE
+############################################
+# Function to fit and evaluate models
+fit_model <- function(formula, data) {
+  tryCatch({
+    model <- polr(formula, data = data, Hess = FALSE, method = "probit")
+    aic <- AIC(model)
+    return(list(formula_str = paste(deparse(formula, width.cutoff = 500), collapse = ""),
+                model = model, aic = aic, error = NULL))
+  }, error = function(e) {
+    return(list(formula_str = NULL, model = NULL, aic = Inf, error = e$message))
+  })
 }
-# Run models on each subset in parallel
-results <- parLapply(cl, subsets, process_subset, response_var = response_var, predictors = predictors)
-# Stop and deregister parallel backend
-stopCluster(cl)
 
+# Build-up phase
+for (i in 1:length(predictors)) {
+    current_predictors <- all.vars(best_formula)[-1]
+    remaining_predictors <- setdiff(predictors, current_predictors)
+    
+    # Use mclapply to parallelize the model fitting with forked processes
+    results <- mclapply(remaining_predictors, function(predictor) {
+        new_formula <- update(best_formula, paste(". ~ . +", predictor))
+        fit <- fit_model(new_formula, input)
+        
+        if (!is.null(fit$error)) {
+            cat("Error for predictor", predictor, ":", fit$error, "\n")
+            return(NULL)
+        }
+        
+        formula_str <- paste(deparse(new_formula, width.cutoff = 500), collapse = "")
+        cat("Tested formula:", formula_str, "AIC:", fit$aic, "\n")
+        list(formula_str = formula_str, aic = fit$aic)
+    }, mc.cores = numCores)
+    
+    # Filter out results with errors
+    results <- Filter(function(x) !is.null(x$formula_str), results)
+    
+    if (length(results) > 0) {
+        best_candidate <- which.min(sapply(results, function(x) x$aic))
+        best_candidate_formula <- results[[best_candidate]]$formula_str
+        best_candidate_aic <- results[[best_candidate]]$aic
+        
+        if (best_candidate_aic < best_aic) {
+            best_formula <- as.formula(best_candidate_formula)
+            best_aic <- best_candidate_aic
+            cat("New best model:", best_candidate_formula, "AIC:", best_aic, "\n")
+        } else {
+            cat("No further improvement, stopping build-up.\n")
+            break
+        }
+    } else {
+        cat("No more predictors to test, stopping build-up.\n")
+        break
+    }
+}
 
+# Final model
+best_model <- polr(best_formula, data = input, Hess = FALSE, method = "probit")
 
+############################################
+# PAIR-DOWN PHASE
+############################################
+current_formula <- best_formula  # start with best FORMULA from build-up phase
+current_aic <- AIC(best_model)
 
+# >>>>> WORKS TO THIS POINT (~66 preds, ~ 12 hours) <<<<<
+# 08/09/2024: Seems to be working for pairdown; outputting formulas as it tests. Waiting for it to finish. If need to, can save outut from buildup for later testing.
 
-# Get a list of all predictor names from each matrix
-all_predictors <- unique(unlist(lapply(results, function(x) if (!is.null(x)) rownames(x))))
-# Create a template matrix with all predictors and zeros
-template <- matrix(0, nrow = length(all_predictors), ncol = 3, dimnames = list(all_predictors, c("Estimate", "Std. Error", "t value")))
-standardized_results <- lapply(results, function(x) {
-  if (is.null(x)) {
-    return(template)
-  } else {
-    # Create a copy of the template
-    standardized_matrix <- template
-    # Update the values for predictors present in this subset's result
-    intersecting_predictors <- intersect(rownames(x), rownames(template))
-    standardized_matrix[intersecting_predictors, ] <- x[intersecting_predictors, ]
-    return(standardized_matrix)
-  }
-})
-# Sum the standardized matrices
-total_sum <- Reduce("+", standardized_results)
-# Calculate the average
-average_betas <- total_sum / length(standardized_results)
-# Print the average results
-print(average_betas)
+repeat {
+    predictors_in_model <- all.vars(current_formula)[-1]
+    
+    # Use mclapply to parallelize the pair-down model fitting with forked processes
+    results <- mclapply(predictors_in_model, function(predictor) {
+        pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+")))
+        if (length(all.vars(pairdown_formula)[-1]) == 0) {
+            return(NULL)
+        }
+        
+        fit <- fit_model(pairdown_formula, input)
+        formula_str <- paste(deparse(pairdown_formula, width.cutoff = 500), collapse = "")
+        list(formula_str = formula_str, aic = fit$aic)
+    }, mc.cores = numCores)
+    
+    # Filter out results with errors
+    results <- Filter(function(x) !is.null(x$formula_str), results)
+    
+    if (length(results) > 0) {
+        best_pairdown_aic <- min(sapply(results, function(x) x$aic))
+        if (best_pairdown_aic < current_aic) {
+            best_pairdown_formula <- results[[which.min(sapply(results, function(x) x$aic))]]$formula_str
+            current_formula <- as.formula(best_pairdown_formula)
+            current_aic <- best_pairdown_aic
+            cat("New best pairdown model:", best_pairdown_formula, "AIC:", best_pairdown_aic, "\n")
+        } else {
+            cat("No further improvement, final model selected.\n")
+            break
+        }
+    } else {
+        cat("No improvement, stopping pair-down phase.\n")
+        break
+    }
+}
 
+# Final pairdown model
+final_model <- polr(current_formula, data = input, Hess = FALSE, method = "probit")
+final_form <- formula(final_model)
 
-# Save output
-output_directory <- "output"
-saveRDS(average_betas, file = file.path(output_directory, paste0(name_prefix, "_average_betas.rds")))
+# Useful info for meta-analysis
+coeff <- coef(final_model)
+odds_ratios <- exp(coeff)
+
+# `assign` to new variables based on name prefix chosen
+assign(paste0(name_prefix, "_final_model"), final_model)
+assign(paste0(name_prefix, "_final_form"), final_form)
+assign(paste0(name_prefix, "_odds_ratios"), odds_ratios)
+
+# Save for later
+output_directory <- "data"
+saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_directory, paste0(name_prefix, "_final_model.rds")))
+saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directory, paste0(name_prefix, "_final_form.rds")))
+saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))

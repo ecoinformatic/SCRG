@@ -16,10 +16,10 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_choc, pred_choc) # choc example
+data <- cbind(resp_pens, pred_pens) # choc example
 
 # Specify a short name of the model
-name <- "choc_non_parallel"
+name <- "pens_parallel_test"
 ############################
 
 # Grab categorical variables (dummyvars has the separated out names/dummy variables)
@@ -43,6 +43,6 @@ input$study <- as.factor(input$study)
 
 # # Run build-up/pair-down R scripts
 start_time <- Sys.time()
-source("scripts/BUPD_nonparallel.R")
+source("inst/scripts/BUPD.R")
 end_time <- Sys.time()
 

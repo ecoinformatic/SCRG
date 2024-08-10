@@ -62,4 +62,4 @@ pred <- pred %>%
   select(-contains(c("Length", "Lgth")))
 
 # Check data
-str(pred)
+# str(pred)
