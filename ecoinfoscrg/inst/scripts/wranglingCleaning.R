@@ -150,7 +150,7 @@ words_to_check <- unique(unlist(pred))
 misspelled_info <- hunspell_check(words_to_check)
 misspelled_words <- words_to_check[!misspelled_info]
 suggestions <- hunspell_suggest(misspelled_words)
-print(data.frame(misspelled = misspelled_words, suggestions = I(suggestions)))
+# print(data.frame(misspelled = misspelled_words, suggestions = I(suggestions)))
 
 # Spelling corrections (words needs to be chosen manually)
 corrections <- data.frame(
@@ -167,3 +167,4 @@ pred <- pred %>%
     }
     column
   }))
+
