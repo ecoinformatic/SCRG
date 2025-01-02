@@ -1,5 +1,5 @@
 # For planar data
-sf::sf_use_s2(FALSE) 
+sf::sf_use_s2(FALSE)
 
 # Load packages
 library(sf)
@@ -7,8 +7,8 @@ library(dplyr)
 
 # Requires having run `wranglingCleaning_kriging.R` then `standardize_kriging.R`
 ## Can be sourced below
-source("scripts/wranglingCleaning_kriging.R")
-source("scripts/standardize_kriging.R")
+source("inst/scripts/wranglingCleaning_kriging.R")
+source("inst/scripts/standardize_kriging.R")
 
 ############################
 # SITEWIDE INTERPOLATION
@@ -23,21 +23,21 @@ crs <- sp::CRS("EPSG:6346")  # retrieve coordinate reference system
 
 # Function for interpolating numerical and binary vars
 site_num <- function(site, var, formula, duplicates = TRUE) {
-  
+
   # Select variable to krige for
   num.var <- as.data.frame(dplyr::select(site, var))  # automatically selects geometry
   newdat <- num.var[is.na(num.var[var]),]  # store rows where data is missing
   num.var <- num.var[!is.na(num.var[var]),]  # remove rows missing data
-  
+
   # Convert to spatial object
   num.var <- sp::SpatialPointsDataFrame(coords = sf::st_coordinates(sf::st_as_sf(num.var)),
                                         data = num.var,
                                         proj4string = crs)
-  
+
   # # Empirical variogram
   # variogram <- automap::autofitVariogram(var ~ 1, bin.var)
   # variogram
-  
+
   # Krige for numerical/binary variable
   krige <- automap::autoKrige(as.formula(formula), num.var,
                               new_data = sp::SpatialPointsDataFrame(sf::st_coordinates(sf::st_as_sf(newdat)),
@@ -50,8 +50,8 @@ site_num <- function(site, var, formula, duplicates = TRUE) {
 
 # IRL Hab_W4
 IRL_habw4_krige <- site_num(IRL, "Hab_W4", formula = "Hab_W4 ~ 1")  # kriging for unknowns
-# saveRDS(IRL_habw4_krige, file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_Hab_W4_krige.rds")
-IRL_habw4_krige <- readRDS(file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_Hab_W4_krige.rds")
+# saveRDS(IRL_habw4_krige, file = "SCRG2/RDS/IRL_Hab_W4_krige.rds")
+IRL_habw4_krige <- readRDS(file = "SCRG2/RDS/IRL_Hab_W4_krige.rds")
 IRL$Hab_W4[is.na(IRL$Hab_W4)] <- IRL_habw4_krige$krige_output$var1.pred
 
 # Add interpolated data to statewide predictors
@@ -62,8 +62,8 @@ pred$Hab_W4[pred$study == "IRL"] <- IRL$Hab_W4
 
 # IRL Rest_Opp
 IRL_restopp_krige <- site_num(IRL, var = "Rest_Opp", formula = "Rest_Opp ~ 1")
-# saveRDS(IRL_restopp_krige, file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_Rest_Opp_krige.rds")
-IRL_restopp_krige <- readRDS(file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_Rest_Opp_krige.rds")
+# saveRDS(IRL_restopp_krige, file = "SCRG2/RDS/IRL_Rest_Opp_krige.rds")
+IRL_restopp_krige <- readRDS(file = "SCRG2/RDS/IRL_Rest_Opp_krige.rds")
 IRL$Rest_Opp[is.na(IRL$Rest_Opp)] <- as.factor(ifelse(IRL_restopp_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
@@ -71,8 +71,8 @@ pred$Rest_Opp[pred$study == "IRL"] <- IRL$Rest_Opp
 
 # IRL X0yster_Pr
 IRL_oysterpr_krige <- site_num(IRL, var = "X0yster_Pr", formula = "X0yster_Pr ~ 1")
-# saveRDS(IRL_oysterpr_krige, file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_X0yster_Pr_krige.rds")
-IRL_oysterpr_krige <- readRDS(file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_X0yster_Pr_krige.rds")
+# saveRDS(IRL_oysterpr_krige, file = "SCRG2/RDS/IRL_X0yster_Pr_krige.rds")
+IRL_oysterpr_krige <- readRDS(file = "SCRG2/RDS/IRL_X0yster_Pr_krige.rds")
 IRL$X0yster_Pr[is.na(IRL$X0yster_Pr)] <- as.factor(ifelse(IRL_oysterpr_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
@@ -80,8 +80,8 @@ pred$X0yster_Pr[pred$study == "IRL"] <- IRL$X0yster_Pr
 
 # IRL Seagrass_P
 IRL_seagrass_krige <- site_num(IRL, var = "Seagrass_P", formula = "Seagrass_P ~ 1")
-# saveRDS(IRL_seagrass_krige, file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_Seagrass_P_krige.rds")
-IRL_seagrass_krige <- readRDS(file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/IRL_Seagrass_P_krige.rds")
+# saveRDS(IRL_seagrass_krige, file = "SCRG2/RDS/IRL_Seagrass_P_krige.rds")
+IRL_seagrass_krige <- readRDS(file = "SCRG2/RDS/IRL_Seagrass_P_krige.rds")
 IRL$Seagrass_P[is.na(IRL$Seagrass_P)] <- as.factor(ifelse(IRL_seagrass_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
@@ -145,13 +145,13 @@ pred$defended[pred$study == "tampa"] <- tampa$defended
 
 # choc SAV
 choc_sav_krige <- site_num(choc, var = "SAV", formula = "SAV ~ 1")
-saveRDS(choc_sav_krige, file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/choc_SAV_krige.rds")
+saveRDS(choc_sav_krige, file = "SCRG2/RDS/choc_SAV_krige.rds")
 choc$SAV[is.na(choc$SAV)] <- as.factor(ifelse(choc_sav_krige$krige_output$var1.pred >= 0.5, 1, 0))
 ### GENERATES ONLY NAs
 
 # choc selectThis
 choc_select_krige <- site_num(choc, var = "selectThis", formula = "selectThis ~ 1")
-saveRDS(choc_select_krige, file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/choc_selectThis_krige.rds")
+saveRDS(choc_select_krige, file = "SCRG2/RDS/choc_selectThis_krige.rds")
 choc$selectThis[is.na(choc$selectThis)] <- as.factor(ifelse(choc_select_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
@@ -170,8 +170,8 @@ pred$angle <- ang$angle
 any(pred$angle > 90)  # check transformation
 
 # Save predictors
-# saveRDS(pred, file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/predictors_kriged_fix.rds")
-pred <- readRDS(file = "C:/Users/erika/OneDrive - University of Central Florida/R/SCRG2/RDS/predictors_kriged_fix.rds")
+# saveRDS(pred, file = "data/predictors_kriged_fix.rds")
+pred <- readRDS(file = "data/predictors_kriged_fix.rds")
 
 # Update site-specific predictors
 choc <- pred[pred$study == "choc",]
@@ -184,25 +184,25 @@ tampa <- pred[pred$study == "tampa",]
 
 # Function for interpolating categorical variables
 site_cat <- function(site, var, duplicates.rm = TRUE) {
-  
+
   # Select variable
   cat.var <- as.data.frame(dplyr::select(site, starts_with(var)))  # automatically selects geometry
-  
+
   # Convert to spatial object
   cat.var <- sp::SpatialPointsDataFrame(coords = sf::st_coordinates(sf::st_as_sf(cat.var)),
                                         data = cat.var,
                                         proj4string = crs)
-  
+
   # Locations to krige for
   name <- deparse(substitute(site))
   newdat <- miss_data %>%
     filter(study == name) %>%
     dplyr::select(starts_with(var))
   newdat <- newdat[newdat[[1]] == 1,]
-  
+
   # Empty list
   krige <- list()
-  
+
   # Krige for categorical variable (if possible)
   for (i in 1:(ncol(cat.var)-1)) {
     print(paste(i, "out of", ncol(cat.var)-1))  # to track progress
@@ -222,28 +222,28 @@ site_cat <- function(site, var, duplicates.rm = TRUE) {
                                      remove_duplicates = duplicates.rm, verbose = TRUE)
     }
   }
-  
+
   # Rename list elements to match categories
   names(krige) <- names(cat.var)[-ncol(cat.var)]
-  
+
   return(krige)  # kriged output
 }
 
 # # Example for choc PermStruc variable
 # choc_Perm_krige <- site_cat(choc, "PermStruc", duplicates.rm = FALSE)
-# 
+#
 # # Combine all kriging outputs
 # new_perm_choc <- new_perm_choc %>%
 #   mutate(PermStruc_1 = choc_Perm_krige[[1]]$var1.pred,
 #          PermStruc_2 = choc_Perm_krige[[2]]$var1.pred,
 #          PermStruc_3 = choc_Perm_krige[[3]]$var1.pred)
-# 
+#
 # for (i in 1:nrow(new_perm_choc)) {
 #   # Select categories with highest probabilities
-#   max_cat <- which(max(c(new_perm_choc$PermStruc_1, 
-#                          new_perm_choc$PermStruc_2, 
+#   max_cat <- which(max(c(new_perm_choc$PermStruc_1,
+#                          new_perm_choc$PermStruc_2,
 #                          new_perm_choc$PermStruc_3)))
-#   
+#
 #   if (all(new_perm_choc[i,] < 0.5)) {
 #     choc$PermStruc_1[choc$geometry == new_perm_choc$geometry[i]] <- 0
 #   } else if (max_cat == 1) {
@@ -254,7 +254,7 @@ site_cat <- function(site, var, duplicates.rm = TRUE) {
 #     choc$PermStruc_3[choc$geometry == new_perm_choc$geometry[i]] <- 1
 #   }
 # }
-# 
+#
 # # Add to statewide predictors
 # pred$PermStruc_1[pred$study == "choc"] <- choc$PermStruc_1
 # pred$PermStruc_2[pred$study == "choc"] <- choc$PermStruc_2

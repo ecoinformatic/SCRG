@@ -1,7 +1,7 @@
 # Cleaning data from predictors for Kriging
 
 # For planar data
-sf::sf_use_s2(FALSE) 
+sf::sf_use_s2(FALSE)
 
 # Load packages
 library(dplyr)
@@ -12,10 +12,10 @@ library(stringr)
 
 # Import statewide predictors for each site
 ## FIX FILEPATH FOR PULL REQUEST
-choc <- st_transform(st_read("C:/Users/erika/OneDrive - University of Central Florida/General - SCRG/choctawatchee_bay_lssm/choc_predicted.shp"))
-IRL <- st_transform(st_read("C:/Users/erika/OneDrive - University of Central Florida/General - SCRG/Final NIRL Shapefile_all data/Final Shapefile_all data/IRL_predicted.shp"))
-pens <- st_transform(st_read("C:/Users/erika/OneDrive - University of Central Florida/General - SCRG/pensacola_lssm/pens_predicted.shp"))
-tampa <- st_transform(st_read("C:/Users/erika/OneDrive - University of Central Florida/General - SCRG/Tampa_Bay_Living_Shoreline_Suitability_Model_Results/tampa_predicted.shp"))
+choc <- st_transform(st_read("../output/Final_Shapefile_all_data/Choctawatchee Bay/choc_predicted.shp"))
+IRL <- st_transform(st_read("../output/Final_Shapefile_all_data/Indian River Lagoon/IRL_predicted.shp"))
+pens <- st_transform(st_read("../output/Final_Shapefile_all_data/Pensacola Bay/pens_predicted.shp"))
+tampa <- st_transform(st_read("../output/Final_Shapefile_all_data/Tampa Bay/tampa_predicted.shp"))
 
 # Rename Erosion column due to duplicate naming
 colnames(choc)[45] <- "Erosion_1"
@@ -33,25 +33,25 @@ tampa_full <- tampa
 # REFORMAT DATA ----
 
 # List numerical vars
-numerical_vars <- c("angle", "IT_Width", "Hab_W1", 
+numerical_vars <- c("angle", "IT_Width", "Hab_W1",
                     "Hab_W2", "Hab_W3", "Hab_W4", "Slope", "X3_m_depth", "X5_m_depth", "Slope_4",
                     "X10th", "X20th", "X30th", "X40th", "X50th", "X60th", "X70th", "X80th",
                     "X90th", "X99th", "MANGROVE")
 
 # List categorical vars
-categorical_vars <- c("bnk_height", "Beach", "WideBeach", "Exposure", "bathymetry", 
-                      "roads", "PermStruc", "PublicRamp", "RiparianLU", "canal", 
-                      "SandSpit", "Structure", "offshorest", "SAV", "marsh_all", 
-                      "tribs", "defended", "rd_pstruc", "lowBnkStrc", "ShlType", 
-                      "Fetch_", "selectThis", "StrucList", "forestshl", 
-                      "City", "Point_Type", "Edge_Type", "Hard_Mater", "Adj_LU", 
-                      "Erosion_1", "Erosion_2", "Owner", "Adj_H1", "Adj_H2", "Adj_H3", 
-                      "Adj_H4", "V_Type1", "V_Type2", "V_Type3", "V_Type4", 
-                      "Rest_Opp", "X0yster_Pr", "Seagrass_P", "Hardened_1", "WTLD_VEG_3") 
+categorical_vars <- c("bnk_height", "Beach", "WideBeach", "Exposure", "bathymetry",
+                      "roads", "PermStruc", "PublicRamp", "RiparianLU", "canal",
+                      "SandSpit", "Structure", "offshorest", "SAV", "marsh_all",
+                      "tribs", "defended", "rd_pstruc", "lowBnkStrc", "ShlType",
+                      "Fetch_", "selectThis", "StrucList", "forestshl",
+                      "City", "Point_Type", "Edge_Type", "Hard_Mater", "Adj_LU",
+                      "Erosion_1", "Erosion_2", "Owner", "Adj_H1", "Adj_H2", "Adj_H3",
+                      "Adj_H4", "V_Type1", "V_Type2", "V_Type3", "V_Type4",
+                      "Rest_Opp", "X0yster_Pr", "Seagrass_P", "Hardened_1", "WTLD_VEG_3")
 # note that study column is excluded here for easier processing later
 
 # List binary variables
-binary_vars <- c("Beach", "WideBeach", "PublicRamp", "canal", "SandSpit", "SAV", 
+binary_vars <- c("Beach", "WideBeach", "PublicRamp", "canal", "SandSpit", "SAV",
                  "defended", "selectThis", "Erosion_2", "Rest_Opp", "X0yster_Pr", "Seagrass_P", "Hardened_1")
 
 # Update list of categorical variables (no binary)
@@ -86,21 +86,21 @@ state <- dplyr::bind_rows(choc, pens, tampa, IRL)
 pred <- state  %>%
   dplyr::select(-"Response") # Remove response variables
 
-pred <- pred %>% 
+pred <- pred %>%
   mutate(across(all_of(numerical_vars), as.numeric)) # convert them to numeric if not already
-# pred <- pred %>% 
+# pred <- pred %>%
 #   mutate(across(all_of(categorical_vars), as.factor)) # convert them to factor if not already
 
 # SPELL CHECK ----
 
 # Spelling and capitalization corrections (words needs to be chosen manually)
 corrections <- data.frame(
-  incorrect = c("YEs", "no", "NO", "No'", "RIprap", "riprap", "Permament", 
-                "Permanenet", "Permanenent", "Bulkead", "Bulkhea", "BUlkhead", 
+  incorrect = c("YEs", "no", "NO", "No'", "RIprap", "riprap", "Permament",
+                "Permanenet", "Permanenent", "Bulkead", "Bulkhea", "BUlkhead",
                 "Bulkkhead", "moderate", "Scrub-shurb", "toe",
                 "S, Shell, v", "R, s, Shell", "high", "low"),
-  correct = c("Yes", "No", "No", "No", "Riprap", "Riprap", "Permanent", 
-              "Permanent", "Permanent", "Bulkhead", "Bulkhead", "Bulkhead", 
+  correct = c("Yes", "No", "No", "No", "Riprap", "Riprap", "Permanent",
+              "Permanent", "Permanent", "Bulkhead", "Bulkhead", "Bulkhead",
               "Bulkhead", "Moderate", "Scrub-shrub", "Toe",
               "S, Shell, V", "R, S, Shell", "High", "Low")
 )
