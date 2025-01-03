@@ -7,7 +7,7 @@ library(MASS)
 # library(ordinal)
 
 # Initial empty model
-# Note that `best_formula` starts with `initial_formula` as baseline 
+# Note that `best_formula` starts with `initial_formula` as baseline
 # initial_formula <- as.formula(paste(response_var, "~ 1 + (1|study)"))
 initial_formula <- as.formula(paste(response_var, "~ 1"))
 best_formula <- initial_formula
@@ -15,7 +15,7 @@ best_formula <- initial_formula
 # best_model <- multinom(best_formula, data = data, MaxNWts = 5000) #nnet
 # best_model <- lmer(best_formula, data = input) # lme4
 # best_model <- polr(best_formula, data = input, method = "probit") # MASS
-best_model <- polr(best_formula, data = input, Hess=FALSE, method="probit")
+best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
 # control_settings <- clmm.control(maxIter = 2000)  # clmm stuff
 # best_model <- clmm(best_formula, data = input, control = control_settings, link = "probit") # ordinal
 # best_model <- glmer(best_formula, data = input, family=binomial(link="probit"))
@@ -33,7 +33,7 @@ fit_model <- function(formula, data) {
   # model <- clmm(formula, data = data, link = "probit")
   # model <- polr(formula, data = data, method = "probit")
   tryCatch({ # NEW LINE
-    model <- polr(formula, data = data, Hess=FALSE, method="probit")
+    model <- polr(formula, data = data, Hess=TRUE, method="probit")
     aic <- AIC(model) # NEW LINE
     return(list(model = model, aic = aic, error = NULL))
   }, error = function(e) { # NEW LINE
@@ -44,13 +44,13 @@ fit_model <- function(formula, data) {
 # Similar to Chris' only with a multinomial logistic regression (which can be switched out)
 for (i in 1:length(predictors)) {
     current_predictors <- all.vars(best_formula)[-1]
-    remaining_predictors <- setdiff(predictors, current_predictors) 
+    remaining_predictors <- setdiff(predictors, current_predictors)
     candidate_models <- list()  # for storing model and their AIC
     # Build models iteratively based on current best model
     for (predictor in remaining_predictors) {
         new_formula <- update(best_formula, paste(". ~ . +", predictor))
         formula_str <- paste(deparse(new_formula, width.cutoff = 500), collapse = "") # converts model formulat to string. Note that the width.cutoff and collapse are EXTREMELY important or deparse will split your string into two lines by default
-        fit <- fit_model(new_formula, input)   
+        fit <- fit_model(new_formula, input)
         if (!is.null(fit$error)) { # NEW LINE
         # Log error if predictor is bad # NEW LINE
           cat("Error for predictor", predictor, ":", fit$error, "\n") # NEW LINE
@@ -71,7 +71,7 @@ for (i in 1:length(predictors)) {
             print(paste("New best model:", best_candidate_formula, "AIC:", best_aic)) # helpful output
         } else {
             print("No further improvement, stopping build-up.")
-            break  
+            break
         }
     } else {
         print("No more predictors to test, stopping build-up.")
@@ -84,7 +84,7 @@ for (i in 1:length(predictors)) {
 # best_model <- multinom(best_formula, data = data, MaxNWts = 5000, trace = FALSE)
 # best_model <- lmer(best_formula, data = input)
 # best_model <- clmm(best_formula, data = input, link = "probit")
-best_model <- polr(best_formula, data = input, Hess=FALSE, method="probit")
+best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
 # summary(best_model)
 ############################################
 # PAIR-DOWN PHASE
@@ -96,10 +96,10 @@ repeat {
   candidate_models <- list() # list to store models and AIC
   # current_model <- lmer(current_formula, data = input)
   # current_model <- clmm(current_formula, data = input, link = "probit")
-  current_model <- polr(current_formula, data = input, Hess=FALSE, method="probit")
+  current_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
   # current_aic <- AIC(multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)) # calculate AIC of current best model
   current_aic <- AIC(current_model)
-  
+
   for (predictor in predictors_in_model) { # Loop through each predictors to test their removal
     pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+"))) # New formula without current predictor
     if (length(all.vars(pairdown_formula)[-1]) == 0) { # check if model is empty (no predictors)
@@ -111,9 +111,9 @@ repeat {
     candidate_models[formula_str] <- fit$aic # Store AIC and formula of pairdown model
     print(paste("Testing pairdown formula:", deparse(pairdown_formula), "with AIC:", pairdown_aic)) # Helpful output
   }
-  
+
   # See if any pairdown model is better than current best model
-  if (length(candidate_models) > 0) { 
+  if (length(candidate_models) > 0) {
     best_pairdown_aic <- min(sapply(candidate_models, identity)) # find smallest AIC among pairdown models
     if (best_pairdown_aic < current_aic) { # If a pairdown model has lower AIC, update current best model
       best_pairdown_formula <- names(candidate_models)[which.min(sapply(candidate_models, identity))]
@@ -133,7 +133,7 @@ repeat {
 # final_model <- multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)
 # final_model <- lmer(current_formula, data = input)
 # final_model <- clmm(current_formula, data = input, link = "probit")
-final_model <- polr(current_formula, data = input, Hess=FALSE, method="probit")
+final_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
 # summary(final_model)
 # final formula
 final_form <- formula(final_model)
