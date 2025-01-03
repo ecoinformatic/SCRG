@@ -12,3 +12,4 @@ large_value <- 10000
 diag(cov_matrix)[missing_values[diag(TRUE, nrow(cov_matrix))]] <- large_value
 # View(cov_matrix)
 
+

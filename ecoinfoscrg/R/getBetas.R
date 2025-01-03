@@ -3,13 +3,13 @@ library(dplyr)
 ############################
 # GRAB MODEL OUTPUT
 ############################
-source("inst/scripts/wranglingCleaning.R")
-source("inst/scripts/standardize.R")
+source("ecoinfoscrg/inst/scripts/wranglingCleaning.R")
+source("ecoinfoscrg/inst/scripts/standardize.R")
 
-chocBetas <- readRDS("data/choctawatchee_bay/chocContinuous_average_betas.rds")
-pensBetas <- readRDS("data/santa_rosa_bay/pensContinuous_average_betas.rds")
-IRLBetas <- readRDS("data/indian_river_lagoon/IRLContinuous_average_betas.rds")
-tampaBetas <- readRDS("data/tampa_bay/tampaContinuous_average_betas.rds")
+chocBetas <- readRDS("ecoinfoscrg/data/choctawatchee_bay/chocContinuous_average_betas.rds")
+pensBetas <- readRDS("ecoinfoscrg/data/santa_rosa_bay/pensContinuous_average_betas.rds")
+IRLBetas <- readRDS("ecoinfoscrg/data/indian_river_lagoon/IRLContinuous_average_betas.rds")
+tampaBetas <- readRDS("ecoinfoscrg/data/tampa_bay/tampaContinuous_average_betas.rds")
 
 # Get predictors (excluding study and definitions)
 numeric_pred <- pred %>%
@@ -46,6 +46,7 @@ combined_betas[missing_cols] <- NA
 # GENERATE AVERAGES AND REPLACE NA's WITH THEM
 ############################
 # Get average for each row ignore NA
+# Replace this section with values interpolated by kriging
 combined_betas[] <- lapply(combined_betas, function(x) as.numeric(as.character(x)))
 row_averages <- apply(combined_betas, 1, function(row) mean(row, na.rm = TRUE))
 
@@ -65,25 +66,31 @@ combined_betas[2, ][is.na(combined_betas[2, ])] <- pens_avg
 combined_betas[3, ][is.na(combined_betas[3, ])] <- tampa_avg
 combined_betas[4, ][is.na(combined_betas[4, ])] <- IRL_avg
 
+# Add study column (optional)
+combined_betas$study <- c("choc", "pens", "tampa", "IRL")
+# Remove study column
+combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
+
+
 ################################
 # SCALE BETAS TO REFERENCE STUDY
 ################################
-# Tampa as reference
-reference_study <- combined_betas[3, ]
-# str(reference_study, list.len=ncol(reference_study))
-
-for (i in 2:(ncol(combined_betas))) { # the last column is the study
-  reference_value <- as.numeric(reference_study[i])
-
-  # Scale columns by reference study's beta value
-  combined_betas[, i] <- combined_betas[, i] / reference_value
-}
-
-# add study column (optional)
-combined_betas$study <- c("choc", "pens", "tampa", "IRL")
-# Remove study columned
-combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
-# View(combined_betas_only)
+# # Tampa as reference
+# reference_study <- combined_betas[3, ]
+# # str(reference_study, list.len=ncol(reference_study))
+# 
+# for (i in 2:(ncol(combined_betas))) { # the last column is the study
+#   reference_value <- as.numeric(reference_study[i])
+# 
+#   # Scale columns by reference study's beta value
+#   combined_betas[, i] <- combined_betas[, i] / reference_value
+# }
+# 
+# # add study column (optional)
+# combined_betas$study <- c("choc", "pens", "tampa", "IRL")
+# # Remove study column
+# combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
+# # View(combined_betas_only)
 
 ################################
 # EXTRA: SE (for effect size)
