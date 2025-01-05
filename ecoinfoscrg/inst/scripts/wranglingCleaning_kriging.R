@@ -7,11 +7,9 @@ sf::sf_use_s2(FALSE)
 library(dplyr)
 # library(sp)
 library(sf)
-# library(gstat)
 library(stringr)
 
 # Import statewide predictors for each site
-## FIX FILEPATH FOR PULL REQUEST
 choc <- st_transform(st_read("../output/Final_Shapefile_all_data/Choctawatchee Bay/choc_predicted.shp"))
 IRL <- st_transform(st_read("../output/Final_Shapefile_all_data/Indian River Lagoon/IRL_predicted.shp"))
 pens <- st_transform(st_read("../output/Final_Shapefile_all_data/Pensacola Bay/pens_predicted.shp"))
@@ -30,7 +28,9 @@ pens_full <- pens
 tampa_full <- tampa
 
 
-# REFORMAT DATA ----
+####################
+# REFORMAT DATA
+####################
 
 # List numerical vars
 numerical_vars <- c("angle", "IT_Width", "Hab_W1",
@@ -91,7 +91,10 @@ pred <- pred %>%
 # pred <- pred %>%
 #   mutate(across(all_of(categorical_vars), as.factor)) # convert them to factor if not already
 
-# SPELL CHECK ----
+
+##################
+# SPELL CHECK
+##################
 
 # Spelling and capitalization corrections (words needs to be chosen manually)
 corrections <- data.frame(

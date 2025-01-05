@@ -50,8 +50,8 @@ site_num <- function(site, var, formula, duplicates = TRUE) {
 
 # IRL Hab_W4
 IRL_habw4_krige <- site_num(IRL, "Hab_W4", formula = "Hab_W4 ~ 1")  # kriging for unknowns
-# saveRDS(IRL_habw4_krige, file = "SCRG2/RDS/IRL_Hab_W4_krige.rds")
-IRL_habw4_krige <- readRDS(file = "SCRG2/RDS/IRL_Hab_W4_krige.rds")
+# saveRDS(IRL_habw4_krige, file = "../Data/Kriging_outputs/IRL_Hab_W4_krige.rds")
+IRL_habw4_krige <- readRDS(file = "../Data/Kriging_outputs/IRL_Hab_W4_krige.rds")
 IRL$Hab_W4[is.na(IRL$Hab_W4)] <- IRL_habw4_krige$krige_output$var1.pred
 
 # Add interpolated data to statewide predictors
@@ -62,8 +62,8 @@ pred$Hab_W4[pred$study == "IRL"] <- IRL$Hab_W4
 
 # IRL Rest_Opp
 IRL_restopp_krige <- site_num(IRL, var = "Rest_Opp", formula = "Rest_Opp ~ 1")
-# saveRDS(IRL_restopp_krige, file = "SCRG2/RDS/IRL_Rest_Opp_krige.rds")
-IRL_restopp_krige <- readRDS(file = "SCRG2/RDS/IRL_Rest_Opp_krige.rds")
+# saveRDS(IRL_restopp_krige, file = "../Data/Kriging_outputs/IRL_Rest_Opp_krige.rds")
+IRL_restopp_krige <- readRDS(file = "../Data/Kriging_outputs/IRL_Rest_Opp_krige.rds")
 IRL$Rest_Opp[is.na(IRL$Rest_Opp)] <- as.factor(ifelse(IRL_restopp_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
@@ -71,8 +71,8 @@ pred$Rest_Opp[pred$study == "IRL"] <- IRL$Rest_Opp
 
 # IRL X0yster_Pr
 IRL_oysterpr_krige <- site_num(IRL, var = "X0yster_Pr", formula = "X0yster_Pr ~ 1")
-# saveRDS(IRL_oysterpr_krige, file = "SCRG2/RDS/IRL_X0yster_Pr_krige.rds")
-IRL_oysterpr_krige <- readRDS(file = "SCRG2/RDS/IRL_X0yster_Pr_krige.rds")
+# saveRDS(IRL_oysterpr_krige, file = "../Data/Kriging_outputs/IRL_X0yster_Pr_krige.rds")
+IRL_oysterpr_krige <- readRDS(file = "../Data/Kriging_outputs/IRL_X0yster_Pr_krige.rds")
 IRL$X0yster_Pr[is.na(IRL$X0yster_Pr)] <- as.factor(ifelse(IRL_oysterpr_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
@@ -80,8 +80,8 @@ pred$X0yster_Pr[pred$study == "IRL"] <- IRL$X0yster_Pr
 
 # IRL Seagrass_P
 IRL_seagrass_krige <- site_num(IRL, var = "Seagrass_P", formula = "Seagrass_P ~ 1")
-# saveRDS(IRL_seagrass_krige, file = "SCRG2/RDS/IRL_Seagrass_P_krige.rds")
-IRL_seagrass_krige <- readRDS(file = "SCRG2/RDS/IRL_Seagrass_P_krige.rds")
+# saveRDS(IRL_seagrass_krige, file = "../Data/Kriging_outputs/IRL_Seagrass_P_krige.rds")
+IRL_seagrass_krige <- readRDS(file = "../Data/Kriging_outputs/IRL_Seagrass_P_krige.rds")
 IRL$Seagrass_P[is.na(IRL$Seagrass_P)] <- as.factor(ifelse(IRL_seagrass_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
@@ -145,17 +145,20 @@ pred$defended[pred$study == "tampa"] <- tampa$defended
 
 # choc SAV
 choc_sav_krige <- site_num(choc, var = "SAV", formula = "SAV ~ 1")
-saveRDS(choc_sav_krige, file = "SCRG2/RDS/choc_SAV_krige.rds")
+# saveRDS(choc_sav_krige, file = "../Data/Kriging_outputs/choc_SAV_krige.rds")
 choc$SAV[is.na(choc$SAV)] <- as.factor(ifelse(choc_sav_krige$krige_output$var1.pred >= 0.5, 1, 0))
 ### GENERATES ONLY NAs
 
 # choc selectThis
 choc_select_krige <- site_num(choc, var = "selectThis", formula = "selectThis ~ 1")
-saveRDS(choc_select_krige, file = "SCRG2/RDS/choc_selectThis_krige.rds")
+# saveRDS(choc_select_krige, file = "../Data/Kriging_outputs/choc_selectThis_krige.rds")
 choc$selectThis[is.na(choc$selectThis)] <- as.factor(ifelse(choc_select_krige$krige_output$var1.pred >= 1.5, 1, 0))
 
 # Add interpolated data to statewide predictors
 pred$selectThis[pred$study == "choc"] <- choc$selectThis
+
+# Save predictors
+# saveRDS(pred, file = "../Data/Kriging_outputs/predictors_kriged.rds")
 
 
 # Statewide angle transformation

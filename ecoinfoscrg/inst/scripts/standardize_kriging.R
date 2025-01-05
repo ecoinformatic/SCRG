@@ -9,20 +9,20 @@ library(sf)
 # NUMERICAL VARS
 #########################
 # List numerical vars
-numerical_vars <- c("angle", "IT_Width", "Hab_W1", 
+numerical_vars <- c("angle", "IT_Width", "Hab_W1",
                     "Hab_W2", "Hab_W3", "Hab_W4", "Slope", "X3_m_depth", "X5_m_depth", "Slope_4",
                     "X10th", "X20th", "X30th", "X40th", "X50th", "X60th", "X70th", "X80th",
                     "X90th", "X99th", "MANGROVE")
-pred <- pred %>% 
+pred <- pred %>%
   mutate(across(all_of(numerical_vars), as.numeric)) # convert them to numeric if not already
 
-# Replace NAs with means
-pred <- pred %>%
-  mutate(across(all_of(numerical_vars), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
-
-# Standardize numeric vars
-pred <- pred %>%
-  mutate(across(all_of(numerical_vars), ~ (.-mean(., na.rm = TRUE))/sd(., na.rm = TRUE)))
+# # Replace NAs with means
+# pred <- pred %>%
+#   mutate(across(all_of(numerical_vars), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+#
+# # Standardize numeric vars
+# pred <- pred %>%
+#   mutate(across(all_of(numerical_vars), ~ (.-mean(., na.rm = TRUE))/sd(., na.rm = TRUE)))
 
 # Checks
 ## make sure sd is close to 1 and mean is close to 0
@@ -33,19 +33,19 @@ summary(pred[numerical_vars]) # summary stats
 # CATEGORICAL VARS
 #########################
 # List cat vars
-categorical_vars <- c("bnk_height", "Beach", "WideBeach", "Exposure", "bathymetry", 
-                      "roads", "PermStruc", "PublicRamp", "RiparianLU", "canal", 
-                      "SandSpit", "Structure", "offshorest", "SAV", "marsh_all", 
-                      "tribs", "defended", "rd_pstruc", "lowBnkStrc", "ShlType", 
-                      "Fetch_", "selectThis", "StrucList", "forestshl", 
-                      "City", "Point_Type", "Edge_Type", "Hard_Mater", "Adj_LU", 
-                      "Erosion_1", "Erosion_2", "Owner", "Adj_H1", "Adj_H2", "Adj_H3", "Adj_H4", "V_Type1", 
+categorical_vars <- c("bnk_height", "Beach", "WideBeach", "Exposure", "bathymetry",
+                      "roads", "PermStruc", "PublicRamp", "RiparianLU", "canal",
+                      "SandSpit", "Structure", "offshorest", "SAV", "marsh_all",
+                      "tribs", "defended", "rd_pstruc", "lowBnkStrc", "ShlType",
+                      "Fetch_", "selectThis", "StrucList", "forestshl",
+                      "City", "Point_Type", "Edge_Type", "Hard_Mater", "Adj_LU",
+                      "Erosion_1", "Erosion_2", "Owner", "Adj_H1", "Adj_H2", "Adj_H3", "Adj_H4", "V_Type1",
                       "V_Type2", "V_Type3", "V_Type4", "Rest_Opp", "X0yster_Pr", "Seagrass_P",
-                      "Hardened_1", "WTLD_VEG_3") 
+                      "Hardened_1", "WTLD_VEG_3")
 # note that study column is excluded here for easier processing later
 
 # List binary variables
-binary_vars <- c("Beach", "WideBeach", "PublicRamp", "canal", "SandSpit", "SAV", 
+binary_vars <- c("Beach", "WideBeach", "PublicRamp", "canal", "SandSpit", "SAV",
                  "defended", "selectThis", "Erosion_2", "Rest_Opp", "X0yster_Pr", "Seagrass_P", "Hardened_1")
 
 # Update list of cat vars (exclude binary)
@@ -59,7 +59,7 @@ for (var in categorical_vars2) {
 categorical_vars2  # Edge_Type, Hard_Mater, Adj_LU, Adj_H1, Adj_H2, Adj_H3, Adj_H4, V_Type4
 
 # Indicator variables to convert to dummy vars
-dummy_vars <- c("Edge_Type", "Hard_Mater", "Adj_LU", "Adj_H1",  
+dummy_vars <- c("Edge_Type", "Hard_Mater", "Adj_LU", "Adj_H1",
                 "Adj_H2", "Adj_H3", "Adj_H4", "V_Type4")
 
 # JUST IN CASE
@@ -73,7 +73,7 @@ edgetype <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                    dimnames = list(NULL, c("Edge_Type_Missing", unique(unlist(strsplit(as.character(pred$Edge_Type), ",")))[-1])))
 edgetype <- as.data.frame(edgetype)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(edgetype)) {  
+for (i in 2:ncol(edgetype)) {
   # Identify categories present at each observation
   edgetype[which(grepl(colnames(edgetype)[i], pred$Edge_Type)), i] <- 1
   colnames(edgetype)[i] <- paste0("Edge_Type_", i-1)
@@ -96,7 +96,7 @@ hardmater <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                     dimnames = list(NULL, c("Hard_Mater_Missing", unique(unlist(strsplit(as.character(pred$Hard_Mater), ", ")))[-1])))
 hardmater <- as.data.frame(hardmater)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(hardmater)) {  
+for (i in 2:ncol(hardmater)) {
   # Identify categories present at each observation
   hardmater[which(grepl(colnames(hardmater)[i], pred$Hard_Mater, fixed = TRUE)), i] <- 1
   colnames(hardmater)[i] <- paste0("Hard_Mater_", i-1)
@@ -119,7 +119,7 @@ adj_lu <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                  dimnames = list(NULL, c("Adj_LU_Missing", unique(unlist(strsplit(as.character(pred$Adj_LU), ", ")))[-1])))
 adj_lu <- as.data.frame(adj_lu)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(adj_lu)) {  
+for (i in 2:ncol(adj_lu)) {
   # Identify categories present at each observation
   adj_lu[which(grepl(colnames(adj_lu)[i], pred$Adj_LU, fixed = TRUE)), i] <- 1
   colnames(adj_lu)[i] <- paste0("Adj_LU_", i-1)
@@ -142,7 +142,7 @@ adj_h1 <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                  dimnames = list(NULL, c("Adj_H1_Missing", unique(unlist(strsplit(as.character(pred$Adj_H1), ", ")))[-1])))
 adj_h1 <- as.data.frame(adj_h1)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(adj_h1)) {  
+for (i in 2:ncol(adj_h1)) {
   # Identify categories present at each observation
   adj_h1[which(grepl(colnames(adj_h1)[i], pred$Adj_H1, fixed = TRUE)), i] <- 1
   colnames(adj_h1)[i] <- paste0("Adj_H1_", i-1)
@@ -165,7 +165,7 @@ adj_h2 <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                  dimnames = list(NULL, c("Adj_H2_Missing", unique(unlist(strsplit(as.character(pred$Adj_H2), ", ")))[-1])))
 adj_h2 <- as.data.frame(adj_h2)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(adj_h2)) {  
+for (i in 2:ncol(adj_h2)) {
   # Identify categories present at each observation
   adj_h2[which(grepl(colnames(adj_h2)[i], pred$Adj_H2, fixed = TRUE)), i] <- 1
   colnames(adj_h2)[i] <- paste0("Adj_H2_", i-1)
@@ -188,7 +188,7 @@ adj_h3 <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                  dimnames = list(NULL, c("Adj_H3_Missing", unique(unlist(strsplit(as.character(pred$Adj_H3), ", ")))[-1])))
 adj_h3 <- as.data.frame(adj_h3)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(adj_h3)) {  
+for (i in 2:ncol(adj_h3)) {
   # Identify categories present at each observation
   adj_h3[which(grepl(colnames(adj_h3)[i], pred$Adj_H3, fixed = TRUE)), i] <- 1
   colnames(adj_h3)[i] <- paste0("Adj_H3_", i-1)
@@ -211,7 +211,7 @@ adj_h4 <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                  dimnames = list(NULL, c("Adj_H4_Missing", unique(unlist(strsplit(as.character(pred$Adj_H4), ", ")))[-1])))
 adj_h4 <- as.data.frame(adj_h4)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(adj_h4)) {  
+for (i in 2:ncol(adj_h4)) {
   # Identify categories present at each observation
   adj_h4[which(grepl(colnames(adj_h4)[i], pred$Adj_H4, fixed = TRUE)), i] <- 1
   colnames(adj_h4)[i] <- paste0("Adj_H4_", i-1)
@@ -234,7 +234,7 @@ v_type4 <- matrix(data = 0, nrow = nrow(pred),  # matrix of unique categories
                   dimnames = list(NULL, c("V_Type4_Missing", unique(unlist(strsplit(as.character(pred$V_Type4), ", ")))[-1])))
 v_type4 <- as.data.frame(v_type4)  # convert matrix to data frame
 # Convert categories to binaries
-for (i in 2:ncol(v_type4)) {  
+for (i in 2:ncol(v_type4)) {
   # Identify categories present at each observation
   v_type4[which(grepl(colnames(v_type4)[i], pred$V_Type4, fixed = TRUE)), i] <- 1
   colnames(v_type4)[i] <- paste0("V_Type4_", i-1)
@@ -245,7 +245,7 @@ v_type4 <- v_type4 %>%  # factorize all columns
 pred <- cbind(pred, v_type4)  # add to predictors
 
 
-pred <- pred %>% 
+pred <- pred %>%
   mutate(across(all_of(categorical_vars), as.factor)) # convert them to factor if not already
 
 
@@ -319,7 +319,7 @@ pred <- pred %>%
 
 # Drop geometry for dummy encoding
 geom <- pred$geometry  # save geometry separately
-pred <- st_drop_geometry(pred)  
+pred <- st_drop_geometry(pred)
 
 # Make dummy vars for all
 for (var in categorical_vars3) {
