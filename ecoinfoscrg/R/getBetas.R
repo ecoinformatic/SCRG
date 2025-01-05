@@ -3,18 +3,26 @@ library(dplyr)
 ############################
 # GRAB MODEL OUTPUT
 ############################
-source("ecoinfoscrg/inst/scripts/wranglingCleaning.R")
-source("ecoinfoscrg/inst/scripts/standardize.R")
+# Original
+source("inst/scripts/wranglingCleaning.R")
+source("inst/scripts/standardize.R")
+# Updated with Kriging
+source("inst/scripts/wranglingCleaning_kriging.R")
+source("inst/scripts/standardize_kriging.R")
+pred <- readRDS("data/predictors_kriged_standardized.rds")
+pred <- as.data.frame(pred)  # convert to dataframe so "geometry" is not selected
 
-chocBetas <- readRDS("ecoinfoscrg/data/choctawatchee_bay/chocContinuous_average_betas.rds")
-pensBetas <- readRDS("ecoinfoscrg/data/santa_rosa_bay/pensContinuous_average_betas.rds")
-IRLBetas <- readRDS("ecoinfoscrg/data/indian_river_lagoon/IRLContinuous_average_betas.rds")
-tampaBetas <- readRDS("ecoinfoscrg/data/tampa_bay/tampaContinuous_average_betas.rds")
+chocBetas <- readRDS("data/choc_non_parallel_fix_average_betas.rds")
+pensBetas <- readRDS("data/pens_non_parallel_fix_average_betas.rds")
+IRLBetas <- readRDS("data/IRL_non_parallel_fix_average_betas.rds")
+tampaBetas <- readRDS("data/tampa_non_parallel_fix_average_betas.rds")
 
 # Get predictors (excluding study and definitions)
 numeric_pred <- pred %>%
   select_if(is.numeric)
-numeric_pred_cols <- colnames(numeric_pred)
+factor_pred <- pred %>%
+  select_if(is.factor)
+numeric_pred_cols <- colnames(cbind(numeric_pred, factor_pred))
 
 # Function to convert model out put to dataframe (only keep "Estimate")
 prepare_df <- function(matrix, source) {
@@ -78,14 +86,14 @@ combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
 # # Tampa as reference
 # reference_study <- combined_betas[3, ]
 # # str(reference_study, list.len=ncol(reference_study))
-# 
+#
 # for (i in 2:(ncol(combined_betas))) { # the last column is the study
 #   reference_value <- as.numeric(reference_study[i])
-# 
+#
 #   # Scale columns by reference study's beta value
 #   combined_betas[, i] <- combined_betas[, i] / reference_value
 # }
-# 
+#
 # # add study column (optional)
 # combined_betas$study <- c("choc", "pens", "tampa", "IRL")
 # # Remove study column

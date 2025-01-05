@@ -904,11 +904,21 @@ documented in `MetaAnalysis.md`.
     name <- "choc_non_parallel_fix"
     ############################
 
-    # Grab categorical variables (dummyvars has the separated out names/dummy variables)
-    dummyvars <- colnames(pred)[grepl("_", colnames(pred))]
-
+    # # Grab categorical variables (dummyvars has the separated out names/dummy variables)
+    # dummyvars <- colnames(pred)[grepl("_", colnames(pred))]
+    
     # List predictors (AKA column names of known predictors)
     predictors <- c(setdiff(numerical_vars, dummyvars), dummyvars)
+
+    # # List predictors (AKA column names of known predictors)
+    # numeric_pred <- pred %>%
+    #   select_if(is.numeric)
+    # factor_pred <- pred %>%
+    #   select_if(is.factor)
+    # factor_pred <- factor_pred %>%
+    #   mutate(across(all_of(colnames(factor_pred)), as.character)) %>%
+    #   mutate(across(all_of(colnames(factor_pred)), as.numeric))
+    # predictors <- colnames(cbind(numeric_pred, factor_pred))
 
     # Define the response variable
     response_var <- "Response"
