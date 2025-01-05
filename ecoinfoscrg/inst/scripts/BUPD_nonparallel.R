@@ -148,7 +148,7 @@ assign(paste0(name_prefix, "_final_model"), final_model)
 assign(paste0(name_prefix, "_final_form"), final_form)
 assign(paste0(name_prefix, "_odds_ratios"), odds_ratios)
 # save for later
-output_directory <- "output" # output directory
+output_directory <- "data" # output directory
 saveRDS(get(paste0(name_prefix, "_final_model")), file = file.path(output_directory, paste0(name_prefix, "_final_model.rds")))
 saveRDS(get(paste0(name_prefix, "_final_form")), file = file.path(output_directory, paste0(name_prefix, "_final_form.rds")))
 saveRDS(get(paste0(name_prefix, "_odds_ratios")), file = file.path(output_directory, paste0(name_prefix, "_odds_ratios.rds")))

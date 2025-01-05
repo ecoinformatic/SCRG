@@ -873,9 +873,10 @@ documented in `MetaAnalysis.md`.
     #############################################
     resp <- as.data.frame(cbind(state$Response, state$study))
     colnames(resp) <- c("Response", "study")
-
+    # NEW!
     # resp <- data.frame(Response = state$Response)
-    resp <- data.frame(Response = factor(state$Response, ordered = TRUE))
+    resp$Response <- as.factor(resp$Response)
+    resp$Response <- ordered(resp$Response)
 
     # Replace NAs with means for numerical variables
     pred <- pred %>%

@@ -5,7 +5,8 @@ resp <- as.data.frame(cbind(state$Response, state$study))
 colnames(resp) <- c("Response", "study")
 # NEW!
 # resp <- data.frame(Response = state$Response)
-resp <- data.frame(Response = factor(state$Response, ordered = TRUE))
+resp$Response <- as.factor(resp$Response)
+resp$Response <- ordered(resp$Response)
 
 # Replace NAs with means for numerical variables
 pred <- pred %>%
@@ -36,11 +37,15 @@ data <- cbind(resp_choc, pred_choc) # choc example
 name <- "choc_non_parallel_fix"
 ############################
 
-# Grab categorical variables (dummyvars has the separated out names/dummy variables)
-dummyvars <- colnames(pred)[grepl("_", colnames(pred))]
+# # Grab categorical variables (dummyvars has the separated out names/dummy variables)
+# dummyvars <- colnames(pred)[grepl("_", colnames(pred))]
 
 # List predictors (AKA column names of known predictors)
-predictors <- c(setdiff(numerical_vars, dummyvars), dummyvars)
+numeric_pred <- pred %>%
+  select_if(is.numeric)
+factor_pred <- pred %>%
+  select_if(is.factor)
+predictors <- colnames(cbind(numeric_pred, factor_pred))
 
 # Define the response variable
 response_var <- "Response"
