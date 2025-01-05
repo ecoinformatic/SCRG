@@ -10,6 +10,7 @@ library(sf)
 library(stringr)
 
 # Import statewide predictors for each site
+## Requires DBF files to load properly (too large for GitHub)
 choc <- st_transform(st_read("../output/Final_Shapefile_all_data/Choctawatchee Bay/choc_predicted.shp"))
 IRL <- st_transform(st_read("../output/Final_Shapefile_all_data/Indian River Lagoon/IRL_predicted.shp"))
 pens <- st_transform(st_read("../output/Final_Shapefile_all_data/Pensacola Bay/pens_predicted.shp"))

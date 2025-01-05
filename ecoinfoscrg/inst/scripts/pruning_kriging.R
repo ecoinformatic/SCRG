@@ -15,6 +15,9 @@ pred <- pred %>%
 pred <- pred %>%
   mutate(across(all_of(numerical_vars), ~ (.-mean(., na.rm = TRUE))/sd(., na.rm = TRUE)))
 
+# Save standardized predictors
+# saveRDS(pred, file = "data/predictors_kriged_standardized.RDS")
+
 resp_choc <- resp %>% filter(study == "choc")
 resp_pens <- resp %>% filter(study == "pens")
 resp_tampa <- resp %>% filter(study == "tampa")
