@@ -3,6 +3,9 @@
 #############################################
 resp <- as.data.frame(cbind(state$Response, state$study))
 colnames(resp) <- c("Response", "study")
+# NEW!
+# resp <- data.frame(Response = state$Response)
+resp <- data.frame(Response = factor(state$Response, ordered = TRUE))
 
 # Replace NAs with means for numerical variables
 pred <- pred %>%
@@ -37,115 +40,106 @@ dummyvars <- colnames(pred)[grepl("_", colnames(pred))]
 predictors <- c(setdiff(numerical_vars, dummyvars), dummyvars)
 
 # Define the response variable
-response_var <- "Response" 
-
-# NEW! 
-# resp <- data.frame(Response = state$Response)
-resp <- data.frame(Response = factor(state$Response, ordered = TRUE))
-
+response_var <- "Response"
 
 study <- data.frame(study = state$study)
-input <- cbind(resp, pred)
+input <- cbind(resp_choc, pred_choc)
 input$SMMv5Def <- NULL
 input$study <- as.factor(input$study)
 
 # Run build-up/pair-down R scripts
 start_time <- Sys.time()
-source("scripts/BUPD_nonparallel.R")
+source("inst/scripts/BUPD_nonparallel.R")
 end_time <- Sys.time()
 
+
+#######################
+# RETRIEVE BETAS
+#######################
+
+# Betas were retrieved from the model summary for each site
+average_betas <- as.data.frame(summary(final_model)[1])
+colnames(average_betas) <- c("Estimate", "Std. Error", "t value")
+average_betas <- as.matrix(average_betas)
+
+# Save output
+output_directory <- "data"
+saveRDS(average_betas, file = file.path(output_directory, paste0(name, "_average_betas.rds")))
 
 
 #######################
 # COMPARE MODELS
 #######################
 
-# choc (~17 mins, ~17 mins)
-choc_mod_old <- readRDS("output/choc_parallel_test_final_model.rds")
-choc_mod_new <- readRDS("output/choc_non_parallel_final_model.rds")
-choc_mod_fix <- readRDS("output/choc_non_parallel_fix_final_model.rds")
+# old = prior to Kriging
+# fix = after Kriging and angle transformation
 
-# pens (~31 mins, ~18 mins)
-pens_mod_old <- readRDS("output/pensTest_final_model.rds")
-pens_mod_new <- readRDS("output/pens_non_parallel_final_model.rds")
-pens_mod_fix <- readRDS("output/pens_non_parallel_fix_final_model.rds")
+# choc (~126 mins)
+choc_mod_old <- readRDS("data/old/choc_parallel_test_final_model.rds")
+choc_mod_fix <- readRDS("data/choc_non_parallel_fix_final_model.rds")
+# Response ~ marsh_all_4 + rd_pstruc_1 + RiparianLU_3 + Structure_1 + RiparianLU_18 +
+#           RiparianLU_7 + StrucList_4 + Exposure_2 + tribs_2 + Structure_3 + bathymetry_3 +
+#           RiparianLU_8 + marsh_all_1 + Exposure_3 + marsh_all_6 + RiparianLU_13 +
+#           Structure_2 + roads_3 + RiparianLU_16 + offshorest_1 + roads_1 + RiparianLU_1 +
+#           RiparianLU_15 + RiparianLU_11 + PermStruc_3 + StrucList_8
+## AIC = 7949.623
 
-# tampa (~25 mins, ~18 mins)
-tampa_mod_old <- readRDS("output/tampaTest_final_model.rds")
-tampa_mod_new <- readRDS("output/tampa_non_parallel_final_model.rds")
-tampa_mod_fix <- readRDS("output/tampa_non_parallel_fix_final_model.rds")
+# pens (~117 mins)
+pens_mod_old <- readRDS("data/old/pensTest_final_model.rds")
+pens_mod_fix <- readRDS("data/pens_non_parallel_fix_final_model.rds")
+# Response ~ RiparianLU_7 + bathymetry_1 + Structure_1 + Exposure_1 + PermStruc_3 +
+#           RiparianLU_17 + marsh_all_4 + RiparianLU_3 + offshorest_2 + marsh_all_6 +
+#           roads_3 + RiparianLU_9 + Exposure_2 + bnk_height_2 + angle + tribs_2 +
+#           RiparianLU_11 + bathymetry_2 + Structure_9
+## AIC = 7544.411
 
-# IRL (~34 mins, ~18 mins)
-IRL_mod_old <- readRDS("output/IRLTestNonParallel_final_model.rds")
-IRL_mod_new <- readRDS("output/IRL_non_parallel_final_model.rds")
-IRL_mod_fix <- readRDS("output/IRL_non_parallel_fix_final_model.rds")
+# tampa (~25 mins, ~434 mins)
+tampa_mod_old <- readRDS("data/old/tampaTest_final_model.rds")
+tampa_mod_fix <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
+# Response ~ Structure_1 + RiparianLU_8 + Structure_7 + Exposure_3 + Structure_4 +
+#           Structure_5 + RiparianLU_19 + marsh_all_5 + roads_3 + Structure_10 +
+#           RiparianLU_7 + marsh_all_2 + forestshl_1 + bnk_height_2 + tribs_2 +
+#           RiparianLU_6 + RiparianLU_14 + RiparianLU_4 + RiparianLU_5 + bathymetry_1 +
+#           tribs_3 + RiparianLU_3 + RiparianLU_10 + PermStruc_3 + RiparianLU_15 +
+#           offshorest_3 + RiparianLU_11 + RiparianLU_2 + RiparianLU_17 + RiparianLU_1 +
+#           marsh_all_3
+## AIC = 14984.59
 
-# Full (~41 mins, ~24 mins)
-full_mod_new <- readRDS("output/full_non_parallel_final_model.rds")
-full_mod_fix <- readRDS("output/full_non_parallel_ang_final_model.rds")
-
-# Response ~ Hardened_1 + WTLD_VEG_3_2 + Slope_4 + City_5 + Erosion_1_2 + Adj_LU_7 + Rest_Opp + Adj_H1_6 + City_6
-## AIC: 54.28808
-## AIC2: 54.28279
-
-
-
-
-# NEW average betas???
-choc_betas <- as.data.frame(summary(choc_mod_fix)[1])
-colnames(choc_betas) <- c("Estimate", "Std. Error", "t value")
-choc_betas <- as.matrix(choc_betas)
-
-pens_betas <- as.data.frame(summary(pens_mod_fix)[1])
-colnames(pens_betas) <- c("Estimate", "Std. Error", "t value")
-pens_betas <- as.matrix(pens_betas)
-
-tampa_betas <- as.data.frame(summary(tampa_mod_fix)[1])
-colnames(tampa_betas) <- c("Estimate", "Std. Error", "t value")
-tampa_betas <- as.matrix(tampa_betas)
-
-IRL_betas <- as.data.frame(summary(IRL_mod_fix)[1])
-colnames(IRL_betas) <- c("Estimate", "Std. Error", "t value")
-IRL_betas <- as.matrix(IRL_betas)
-
-## SHOULD THEY ALL BE IDENTICAL???
+# IRL (~34 mins, ~13 mins)
+IRL_mod_old <- readRDS("data/old/IRLTestNonParallel_final_model.rds")
+IRL_mod_fix <- readRDS("data/IRL_non_parallel_fix_final_model.rds")
+# Response ~ Hardened_1 + WTLD_VEG_3_2 + Slope_4 + City_5 + Erosion_1_2 + Adj_LU_7 +
+#           Rest_Opp + Adj_H1_6 + City_6
+## AIC =  54.28279
 
 
 
 
-# FROM OLD BUPD.R SCRIPT
+# # NEW average betas
+# choc_betas <- as.data.frame(summary(choc_mod_fix)[1])
+# colnames(choc_betas) <- c("Estimate", "Std. Error", "t value")
+# choc_betas <- as.matrix(choc_betas)
+# saveRDS(choc_betas, file = "output/choc_non_parallel_fix_average_betas.rds")
+#
+# pens_betas <- as.data.frame(summary(pens_mod_fix)[1])
+# colnames(pens_betas) <- c("Estimate", "Std. Error", "t value")
+# pens_betas <- as.matrix(pens_betas)
+# saveRDS(pens_betas, file = "output/pens_non_parallel_fix_average_betas.rds")
+#
+# tampa_betas <- as.data.frame(summary(tampa_mod_fix)[1])
+# colnames(tampa_betas) <- c("Estimate", "Std. Error", "t value")
+# tampa_betas <- as.matrix(tampa_betas)
+# saveRDS(tampa_betas, file = "output/tampa_non_parallel_fix_average_betas.rds")
+#
+# IRL_betas <- as.data.frame(summary(IRL_mod_fix)[1])
+# colnames(IRL_betas) <- c("Estimate", "Std. Error", "t value")
+# IRL_betas <- as.matrix(IRL_betas)
+# saveRDS(IRL_betas, file = "output/IRL_non_parallel_fix_average_betas.rds")
 
-# Get a list of all predictor names from each matrix
-all_predictors <- unique(unlist(lapply(results, function(x) if (!is.null(x)) rownames(x))))
-# Create a template matrix with all predictors and zeros
-template <- matrix(0, nrow = length(all_predictors), ncol = 3, dimnames = list(all_predictors, c("Estimate", "Std. Error", "t value")))
-standardized_results <- lapply(results, function(x) {
-  if (is.null(x)) {
-    return(template)
-  } else {
-    # Create a copy of the template
-    standardized_matrix <- template
-    # Update the values for predictors present in this subset's result
-    intersecting_predictors <- intersect(rownames(x), rownames(template))
-    standardized_matrix[intersecting_predictors, ] <- x[intersecting_predictors, ]
-    return(standardized_matrix)
-  }
-})
-# Sum the standardized matrices
-total_sum <- Reduce("+", standardized_results)
-# Calculate the average
-average_betas <- total_sum / length(standardized_results)
-# Print the average results
-print(average_betas)
-
-
-# Save output
-output_directory <- "output"
-saveRDS(average_betas, file = file.path(output_directory, paste0(name_prefix, "_average_betas.rds")))
-
-chocBetas <- readRDS("output/chocContinuous_average_betas.rds")
-pensBetas <- readRDS("output/pensContinuous_average_betas.rds")
-IRLBetas <- readRDS("output/IRLContinuous_average_betas.rds")
-tampaBetas <- readRDS("output/tampaContinuous_average_betas.rds") 
+# # OLD average betas
+# chocBetas <- readRDS("output/chocContinuous_average_betas.rds")
+# pensBetas <- readRDS("output/pensContinuous_average_betas.rds")
+# IRLBetas <- readRDS("output/IRLContinuous_average_betas.rds")
+# tampaBetas <- readRDS("output/tampaContinuous_average_betas.rds")
 
 
