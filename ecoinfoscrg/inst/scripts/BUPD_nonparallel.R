@@ -109,7 +109,7 @@ repeat {
     fit <- fit_model(pairdown_formula, input)
     formula_str <- paste(deparse(pairdown_formula, width.cutoff = 500), collapse = "") # store the name/string of the model properly
     candidate_models[formula_str] <- fit$aic # Store AIC and formula of pairdown model
-    print(paste("Testing pairdown formula:", deparse(pairdown_formula), "with AIC:", pairdown_aic)) # Helpful output
+    print(paste("Testing pairdown formula:", deparse(pairdown_formula), "with AIC:", fit$aic)) # Helpful output
   }
 
   # See if any pairdown model is better than current best model
