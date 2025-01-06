@@ -9,10 +9,10 @@ source("ecoinfoscrg/R/varCov.R")
 # pensBetas <- readRDS("ecoinfoscrg/data/santa_rosa_bay/pensContinuous_average_betas.rds")
 # IRLBetas <- readRDS("ecoinfoscrg/data/indian_river_lagoon/IRLContinuous_average_betas.rds")
 # tampaBetas <- readRDS("ecoinfoscrg/data/tampa_bay/tampaContinuous_average_betas.rds")
-chocBetas <- readRDS("data/choc_non_parallel_fix_average_betas.rds")
-pensBetas <- readRDS("data/pens_non_parallel_fix_average_betas.rds")
-IRLBetas <- readRDS("data/IRL_non_parallel_fix_average_betas.rds")
-tampaBetas <- readRDS("data/tampa_non_parallel_fix_average_betas.rds")
+chocBetas <- readRDS("data/choc_non_parallel_new_average_betas.rds")
+pensBetas <- readRDS("data/pens_non_parallel_new_average_betas.rds")
+IRLBetas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
+tampaBetas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
 
 ###############
 # Define predictor columns
@@ -27,34 +27,47 @@ betas <- combined_betas_only
 
 
 ###########
-eigen_decomp <- eigen(cov_matrix)
-eigenvalues <- eigen_decomp$values
-eigenvectors <- eigen_decomp$vectors
 
-# Find the smallest positive eigenvalue
-smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
+eigen_decomp <- list()
+eigenvalues <- list()
+eigenvectors <- list()
+smallest_eigenvalue <- list()
+adjusted_eigenvalues <- list()
+adjusted_cov_matrix <- list()
 
-# # Define the maximum allowed variance
-# max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
+# Adjustments to covariance matrices
+for (i in 1:length(cov_matrix)) {
 
-# Adjust eigenvalues
-adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
-adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
-# adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+  eigen_decomp[[i]] <- eigen(cov_matrix[[i]])
+  eigenvalues[[i]] <- eigen_decomp[[i]]$values
+  eigenvectors[[i]] <- eigen_decomp[[i]]$vectors
 
-# adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
-# adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
-adjusted_cov_matrix <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
 
-# another check
-smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
-# smallest_eigenvalue
+  # Find the smallest positive eigenvalue
+  smallest_eigenvalue[[i]] <- min(eigenvalues[[i]][eigenvalues[[i]] > 0])
 
+  # # Define the maximum allowed variance
+  # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
+
+  # Adjust eigenvalues
+  adjusted_eigenvalues[[i]] <- pmax(eigenvalues[[i]], (.Machine$double.eps)^(1/3))
+  adjusted_eigenvalues[[i]] <- pmin(eigenvalues[[i]], (.Machine$double.eps)^(-1/3))
+  # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+
+  # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
+  # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
+  adjusted_cov_matrix[[i]] <- eigenvectors[[i]] %*% diag(adjusted_eigenvalues[[i]]) %*% t(eigenvectors[[i]])
+
+  # another check
+  smallest_eigenvalue[[i]] <- min(adjusted_eigenvalues[[i]][adjusted_eigenvalues[[i]] > 0])
+  # smallest_eigenvalue
+
+  #####
+  # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
+  epsilon <- 1e-6
+  adjusted_cov_matrix[[i]] <- adjusted_cov_matrix[[i]] + diag(epsilon, nrow(adjusted_cov_matrix[[i]]))
 #####
-# Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
-epsilon <- 1e-6
-adjusted_cov_matrix <- adjusted_cov_matrix + diag(epsilon, nrow(adjusted_cov_matrix))
-#####
+}
 
 ##############################
 # Meta-Analytic Regression
@@ -72,7 +85,8 @@ study_vector <- rep(study_labels, each = ncol(combined_betas_only))
 beta = betas_vector
 study = factor(study_vector)
 predictor = rep(colnames(combined_betas_only), times = length(study_labels))
-variance <- diag(cov_matrix)
+variance <- adjusted_cov_matrix
+# variance <- diag(cov_matrix)
 
 # FUNCTION FOR CALLING rma.mv (# `meta_regression` will run with default options )
 meta_regression <- function(

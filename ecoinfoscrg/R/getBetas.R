@@ -12,17 +12,18 @@ source("inst/scripts/standardize_kriging.R")
 pred <- readRDS("data/predictors_kriged_standardized.rds")
 pred <- as.data.frame(pred)  # convert to dataframe so "geometry" is not selected
 
-chocBetas <- readRDS("data/choc_non_parallel_fix_average_betas.rds")
-pensBetas <- readRDS("data/pens_non_parallel_fix_average_betas.rds")
-IRLBetas <- readRDS("data/IRL_non_parallel_fix_average_betas.rds")
-tampaBetas <- readRDS("data/tampa_non_parallel_fix_average_betas.rds")
+chocBetas <- readRDS("data/choc_non_parallel_new_average_betas.rds")
+pensBetas <- readRDS("data/pens_non_parallel_new_average_betas.rds")
+IRLBetas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
+tampaBetas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
 
 # Get predictors (excluding study and definitions)
 numeric_pred <- pred %>%
   select_if(is.numeric)
 factor_pred <- pred %>%
   select_if(is.factor)
-numeric_pred_cols <- colnames(cbind(numeric_pred, factor_pred))
+numeric_pred_cols <- colnames(cbind(factor_pred, numeric_pred))
+numeric_pred_cols <- numeric_pred_cols[-5]
 
 # Function to convert model out put to dataframe (only keep "Estimate")
 prepare_df <- function(matrix, source) {

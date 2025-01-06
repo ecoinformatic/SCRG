@@ -1,15 +1,15 @@
 # Load final models from model selection
-choc_mod_fix <- readRDS("data/choc_non_parallel_fix_final_model.rds")
-pens_mod_fix <- readRDS("data/pens_non_parallel_fix_final_model.rds")
-tampa_mod_fix <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
-IRL_mod_fix <- readRDS("data/IRL_non_parallel_fix_final_model.rds")
+choc_mod_new <- readRDS("data/choc_non_parallel_new_final_model.rds")
+pens_mod_new <- readRDS("data/pens_non_parallel_new_final_model.rds")
+tampa_mod_new <- readRDS("data/tampa_non_parallel_new_final_model.rds")
+IRL_mod_new <- readRDS("data/IRL_non_parallel_new_final_model.rds")
 
 # Generate covariance matrix
 # cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs") # calculates the correlation between each pair of variables using all complete pairs of observations for those variables
 
 # Retrieve covariance matrices from model outputs
-cov_matrix <- list(choc = choc_mod_fix$Hessian, pens = pens_mod_fix$Hessian,
-                   tampa = tampa_mod_fix$Hessian, IRL = IRL_mod_fix$Hessian)
+cov_matrix <- list(choc = choc_mod_new$Hessian, pens = pens_mod_new$Hessian,
+                   tampa = tampa_mod_new$Hessian, IRL = IRL_mod_new$Hessian)
 
 
 # Find where there's missing values
