@@ -49,17 +49,17 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_pens, pred_pens) # choc example
+data <- cbind(resp_tampa, pred_tampa) # choc example
 
 # Specify a short name of the model
-name <- "pens_non_parallel_new"
+name <- "tampa_non_parallel_new"
 ############################
 
 # Define the response variable
 response_var <- "Response"
 
 study <- data.frame(study = state$study)
-input <- cbind(resp_pens, pred_pens)
+input <- cbind(resp_tampa, pred_tampa)
 input$SMMv5Def <- NULL
 input$study <- as.factor(input$study)
 
@@ -108,7 +108,7 @@ choc_mod_new <- readRDS("data/choc_non_parallel_new_final_model.rds")
 #           PermStruc_3
 ## AIC = 5705.783
 
-# pens (~117 mins)
+# pens (~166 mins)
 pens_mod_old <- readRDS("data/old/pensTest_final_model.rds")
 pens_mod_fix <- readRDS("data/pens_non_parallel_fix_final_model.rds")
 # Response ~ RiparianLU_7 + bathymetry_1 + Structure_1 + Exposure_1 + PermStruc_3 +
@@ -117,10 +117,13 @@ pens_mod_fix <- readRDS("data/pens_non_parallel_fix_final_model.rds")
 #           RiparianLU_11 + bathymetry_2 + Structure_9
 ## AIC = 7544.411
 pens_mod_new <- readRDS("data/pens_non_parallel_new_final_model.rds")
-# Response ~
-## AIC =
+# Response ~ RiparianLU_7 + bathymetry_1 + Beach + SAV + canal + PermStruc_2 +
+#           Exposure_1 + marsh_all_5 + RiparianLU_17 + Structure_7 + RiparianLU_3 +
+#           offshorest_2 + marsh_all_4 + roads_1 + defended + tribs_2 + Exposure_2 +
+#           RiparianLU_9 + PublicRamp + angle
+## AIC = 6510.424
 
-# tampa (~434 mins)
+# tampa (~449 mins)
 tampa_mod_old <- readRDS("data/old/tampaTest_final_model.rds")
 tampa_mod_fix <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
 # Response ~ Structure_1 + RiparianLU_8 + Structure_7 + Exposure_3 + Structure_4 +
@@ -132,18 +135,25 @@ tampa_mod_fix <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
 #           marsh_all_3
 ## AIC = 14984.59
 tampa_mod_new <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
-# Response ~
-## AIC
+# Response ~ Structure_1 + RiparianLU_8 + Structure_7 + Exposure_3 + Structure_4 +
+#           Structure_5 + RiparianLU_19 + marsh_all_5 + roads_3 + Structure_10 +
+#           RiparianLU_7 + marsh_all_2 + forestshl_1 + bnk_height_2 + tribs_2 + Beach +
+#           RiparianLU_6 + RiparianLU_14 + RiparianLU_4 + RiparianLU_5 + bathymetry_1 +
+#           RiparianLU_18 + RiparianLU_9 + tribs_3 + PermStruc_3 + offshorest_3 +
+#           RiparianLU_10 + RiparianLU_1 + Exposure_2 + RiparianLU_15 + offshorest_1 +
+#           offshorest_2
+## AIC = 14943.37
 
-# IRL (~34 mins, ~13 mins)
+# IRL (~11 mins)
 IRL_mod_old <- readRDS("data/old/IRLTestNonParallel_final_model.rds")
 IRL_mod_fix <- readRDS("data/IRL_non_parallel_fix_final_model.rds")
 # Response ~ Hardened_1 + WTLD_VEG_3_2 + Slope_4 + City_5 + Erosion_1_2 + Adj_LU_7 +
 #           Rest_Opp + Adj_H1_6 + City_6
-## AIC =  54.28279
+## AIC = 54.28279
 IRL_mod_new <- readRDS("data/IRL_non_parallel_fix_final_model.rds")
-# Response ~
-## AIC =
+# Response ~ Hardened_1 + WTLD_VEG_3_2 + Slope_4 + City_5 + Erosion_1_2 + Adj_LU_7 +
+#           Rest_Opp + Adj_H1_6 + City_6
+## AIC = 54.28279
 
 
 
