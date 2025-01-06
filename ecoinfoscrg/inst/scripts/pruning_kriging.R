@@ -16,9 +16,27 @@ pred <- pred %>%
 pred <- pred %>%
   mutate(across(all_of(numerical_vars), ~ (.-mean(., na.rm = TRUE))/sd(., na.rm = TRUE)))
 
+# List all predictors (AKA column names of known predictors)
+numeric_pred <- pred %>%
+  select_if(is.numeric)
+factor_pred <- pred %>%
+  select_if(is.factor)
+factor_pred <- factor_pred %>%
+  mutate(across(all_of(colnames(factor_pred)), as.character)) %>%
+  mutate(across(all_of(colnames(factor_pred)), as.numeric))
+predictors <- colnames(cbind(factor_pred, numeric_pred))
+predictors <- predictors[-5]  # remove SandSpit
+## Inclusion of SandSpit causes Error in str2lang(x) : <text>:2:0:
+##                              unexpected end of input 1: Response ~ ^
+
+pred <- pred %>%
+  mutate(across(all_of(colnames(factor_pred)), as.character)) %>%
+  mutate(across(all_of(colnames(factor_pred)), as.numeric))  # convert factors to numeric
+
 # Save standardized predictors
 # saveRDS(pred, file = "data/predictors_kriged_standardized.RDS")
 
+# Filter by study
 resp_choc <- resp %>% filter(study == "choc")
 resp_pens <- resp %>% filter(study == "pens")
 resp_tampa <- resp %>% filter(study == "tampa")
@@ -31,35 +49,17 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_choc, pred_choc) # choc example
+data <- cbind(resp_pens, pred_pens) # choc example
 
 # Specify a short name of the model
-name <- "choc_non_parallel_fix"
+name <- "pens_non_parallel_new"
 ############################
-
-# Grab categorical variables (dummyvars has the separated out names/dummy variables)
-dummyvars <- colnames(pred)[grepl("_", colnames(pred))]
-
-# List predictors (AKA column names of known predictors)
-predictors <- c(setdiff(numerical_vars, dummyvars), dummyvars)
-
-# # List predictors (AKA column names of known predictors)
-# numeric_pred <- pred %>%
-#   select_if(is.numeric)
-# factor_pred <- pred %>%
-#   select_if(is.factor)
-# factor_pred <- factor_pred %>%
-#   mutate(across(all_of(colnames(factor_pred)), as.character)) %>%
-#   mutate(across(all_of(colnames(factor_pred)), as.numeric))
-# predictors <- colnames(cbind(numeric_pred, factor_pred))
-## Error in str2lang(x) : <text>:2:0: unexpected end of input 1: Response ~ ^
-
 
 # Define the response variable
 response_var <- "Response"
 
 study <- data.frame(study = state$study)
-input <- cbind(resp_choc, pred_choc)
+input <- cbind(resp_pens, pred_pens)
 input$SMMv5Def <- NULL
 input$study <- as.factor(input$study)
 
@@ -88,9 +88,10 @@ saveRDS(average_betas, file = file.path(output_directory, paste0(name, "_average
 #######################
 
 # old = prior to Kriging
-# fix = after Kriging and angle transformation
+# fix = after Kriging and angle transformation (missing 7 predictors)
+# new = final set of predictors
 
-# choc (~126 mins)
+# choc (~91 mins)
 choc_mod_old <- readRDS("data/old/choc_parallel_test_final_model.rds")
 choc_mod_fix <- readRDS("data/choc_non_parallel_fix_final_model.rds")
 # Response ~ marsh_all_4 + rd_pstruc_1 + RiparianLU_3 + Structure_1 + RiparianLU_18 +
@@ -99,6 +100,13 @@ choc_mod_fix <- readRDS("data/choc_non_parallel_fix_final_model.rds")
 #           Structure_2 + roads_3 + RiparianLU_16 + offshorest_1 + roads_1 + RiparianLU_1 +
 #           RiparianLU_15 + RiparianLU_11 + PermStruc_3 + StrucList_8
 ## AIC = 7949.623
+choc_mod_new <- readRDS("data/choc_non_parallel_new_final_model.rds")
+# Response ~ selectThis + rd_pstruc_1 + Structure_7 + Exposure_2 + RiparianLU_18 +
+#           bathymetry_1 + StrucList_4 + marsh_all_4 + tribs_2 + marsh_all_1 + RiparianLU_17 +
+#           offshorest_1 + roads_3 + RiparianLU_3 + roads_1 + StrucList_8 + StrucList_2 +
+#           RiparianLU_7 + marsh_all_6 + RiparianLU_8 + Structure_2 + RiparianLU_13 +
+#           PermStruc_3
+## AIC = 5705.783
 
 # pens (~117 mins)
 pens_mod_old <- readRDS("data/old/pensTest_final_model.rds")
@@ -108,8 +116,11 @@ pens_mod_fix <- readRDS("data/pens_non_parallel_fix_final_model.rds")
 #           roads_3 + RiparianLU_9 + Exposure_2 + bnk_height_2 + angle + tribs_2 +
 #           RiparianLU_11 + bathymetry_2 + Structure_9
 ## AIC = 7544.411
+pens_mod_new <- readRDS("data/pens_non_parallel_new_final_model.rds")
+# Response ~
+## AIC =
 
-# tampa (~25 mins, ~434 mins)
+# tampa (~434 mins)
 tampa_mod_old <- readRDS("data/old/tampaTest_final_model.rds")
 tampa_mod_fix <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
 # Response ~ Structure_1 + RiparianLU_8 + Structure_7 + Exposure_3 + Structure_4 +
@@ -120,6 +131,9 @@ tampa_mod_fix <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
 #           offshorest_3 + RiparianLU_11 + RiparianLU_2 + RiparianLU_17 + RiparianLU_1 +
 #           marsh_all_3
 ## AIC = 14984.59
+tampa_mod_new <- readRDS("data/tampa_non_parallel_fix_final_model.rds")
+# Response ~
+## AIC
 
 # IRL (~34 mins, ~13 mins)
 IRL_mod_old <- readRDS("data/old/IRLTestNonParallel_final_model.rds")
@@ -127,6 +141,9 @@ IRL_mod_fix <- readRDS("data/IRL_non_parallel_fix_final_model.rds")
 # Response ~ Hardened_1 + WTLD_VEG_3_2 + Slope_4 + City_5 + Erosion_1_2 + Adj_LU_7 +
 #           Rest_Opp + Adj_H1_6 + City_6
 ## AIC =  54.28279
+IRL_mod_new <- readRDS("data/IRL_non_parallel_fix_final_model.rds")
+# Response ~
+## AIC =
 
 
 

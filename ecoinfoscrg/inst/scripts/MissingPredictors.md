@@ -885,7 +885,28 @@ documented in `MetaAnalysis.md`.
     # Standardize numeric vars
     pred <- pred %>%
       mutate(across(all_of(numerical_vars), ~ (.-mean(., na.rm = TRUE))/sd(., na.rm = TRUE)))
+      
+    # List all predictors (AKA column names of known predictors)
+    numeric_pred <- pred %>%
+      select_if(is.numeric)
+    factor_pred <- pred %>%
+      select_if(is.factor)
+    factor_pred <- factor_pred %>%
+      mutate(across(all_of(colnames(factor_pred)), as.character)) %>%
+      mutate(across(all_of(colnames(factor_pred)), as.numeric))
+    predictors <- colnames(cbind(factor_pred, numeric_pred))
+    predictors <- predictors[-5]  # remove SandSpit
+    ## Inclusion of SandSpit causes Error in str2lang(x) : <text>:2:0:
+    ##                              unexpected end of input 1: Response ~ ^
+    
+    pred <- pred %>%
+      mutate(across(all_of(colnames(factor_pred)), as.character)) %>%
+      mutate(across(all_of(colnames(factor_pred)), as.numeric))  # convert factors to numeric
 
+    # Save standardized predictors
+    # saveRDS(pred, file = "data/predictors_kriged_standardized.RDS")
+
+    # Filter by study
     resp_choc <- resp %>% filter(study == "choc")
     resp_pens <- resp %>% filter(study == "pens")
     resp_tampa <- resp %>% filter(study == "tampa")
@@ -903,22 +924,6 @@ documented in `MetaAnalysis.md`.
     # Specify a short name of the model
     name <- "choc_non_parallel_fix"
     ############################
-
-    # # Grab categorical variables (dummyvars has the separated out names/dummy variables)
-    # dummyvars <- colnames(pred)[grepl("_", colnames(pred))]
-    
-    # List predictors (AKA column names of known predictors)
-    predictors <- c(setdiff(numerical_vars, dummyvars), dummyvars)
-
-    # # List predictors (AKA column names of known predictors)
-    # numeric_pred <- pred %>%
-    #   select_if(is.numeric)
-    # factor_pred <- pred %>%
-    #   select_if(is.factor)
-    # factor_pred <- factor_pred %>%
-    #   mutate(across(all_of(colnames(factor_pred)), as.character)) %>%
-    #   mutate(across(all_of(colnames(factor_pred)), as.numeric))
-    # predictors <- colnames(cbind(numeric_pred, factor_pred))
 
     # Define the response variable
     response_var <- "Response"
