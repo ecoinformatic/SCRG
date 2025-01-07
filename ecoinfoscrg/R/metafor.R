@@ -28,38 +28,32 @@ betas <- combined_betas_only
 
 ###########
 
-eigen_decomp <- list()
-eigenvalues <- list()
-eigenvectors <- list()
-smallest_eigenvalue <- list()
-adjusted_eigenvalues <- list()
 adjusted_cov_matrix <- list()
-
 # Adjustments to covariance matrices
 for (i in 1:length(cov_matrix)) {
 
-  eigen_decomp[[i]] <- eigen(cov_matrix[[i]])
-  eigenvalues[[i]] <- eigen_decomp[[i]]$values
-  eigenvectors[[i]] <- eigen_decomp[[i]]$vectors
+  eigen_decomp <- eigen(cov_matrix[[i]])
+  eigenvalues <- eigen_decomp$values
+  eigenvectors <- eigen_decomp$vectors
 
 
   # Find the smallest positive eigenvalue
-  smallest_eigenvalue[[i]] <- min(eigenvalues[[i]][eigenvalues[[i]] > 0])
+  smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
 
   # # Define the maximum allowed variance
   # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
 
   # Adjust eigenvalues
-  adjusted_eigenvalues[[i]] <- pmax(eigenvalues[[i]], (.Machine$double.eps)^(1/3))
-  adjusted_eigenvalues[[i]] <- pmin(eigenvalues[[i]], (.Machine$double.eps)^(-1/3))
+  adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
+  adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
   # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
 
   # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
   # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
-  adjusted_cov_matrix[[i]] <- eigenvectors[[i]] %*% diag(adjusted_eigenvalues[[i]]) %*% t(eigenvectors[[i]])
+  adjusted_cov_matrix[[i]] <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
 
   # another check
-  smallest_eigenvalue[[i]] <- min(adjusted_eigenvalues[[i]][adjusted_eigenvalues[[i]] > 0])
+  smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
   # smallest_eigenvalue
 
   #####

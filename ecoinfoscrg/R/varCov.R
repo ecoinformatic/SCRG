@@ -1,3 +1,6 @@
+# Source getBetas.R script for predictors
+source("R/getBetas.R")
+
 # Load final models from model selection
 choc_mod_new <- readRDS("data/choc_non_parallel_new_final_model.rds")
 pens_mod_new <- readRDS("data/pens_non_parallel_new_final_model.rds")
@@ -8,25 +11,38 @@ IRL_mod_new <- readRDS("data/IRL_non_parallel_new_final_model.rds")
 # cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs") # calculates the correlation between each pair of variables using all complete pairs of observations for those variables
 
 # Retrieve covariance matrices from model outputs
-cov_matrix <- list(choc = choc_mod_new$Hessian, pens = pens_mod_new$Hessian,
-                   tampa = tampa_mod_new$Hessian, IRL = IRL_mod_new$Hessian)
-
+cov_matrix <- list(choc = vcov(choc_mod_new), pens = vcov(pens_mod_new),
+                   tampa = vcov(tampa_mod_new), IRL = vcov(IRL_mod_new))
+# Remove intercepts
+for (i in 1:length(cov_matrix)) {
+  cov_matrix[[i]] <- cov_matrix[[i]][1:(dim(cov_matrix[[i]])[[1]]-2), 1:(dim(cov_matrix[[i]])[[2]]-2)]
+}
 
 # Find where there's missing values
 missing_values <- list()
 for (i in 1:length(cov_matrix)) {
-missing_values[[i]] <- is.na(cov_matrix[[i]])
-}
 
-# Set missing off-diagonals to zero
-for (i in 1:length(cov_matrix)) {
-cov_matrix[[i]][missing_values[[i]] & !row(cov_matrix[[i]]) == col(cov_matrix[[i]])] <- 0
-}
+  # Find non-selected predictors
+  selected <- dimnames(cov_matrix[[i]])
+  missing_preds <- setdiff(numeric_pred_cols, selected[[1]])
+  missing_col <- matrix(NA, length(selected[[1]]), length(missing_preds))
+  missing_row <- matrix(NA, length(missing_preds), length(c(selected[[1]], missing_preds)))
+  cov_matrix[[i]] <- cbind(cov_matrix[[i]], missing_col)
+  cov_matrix[[i]] <- rbind(cov_matrix[[i]], missing_row)
+  dimnames(cov_matrix[[i]]) <- list(c(selected[[1]], missing_preds),
+                                    c(selected[[2]], missing_preds))
 
-# Set missing variances to very large value
-large_value <- 10000
-for (i in 1:length(cov_matrix)) {
-diag(cov_matrix[[i]])[missing_values[[i]][diag(TRUE, nrow(cov_matrix[[i]]))]] <- large_value
+  # Predictors with missing values
+  missing_values[[i]] <- is.na(cov_matrix[[i]])
+
+  # Set missing off-diagonals to zero
+  cov_matrix[[i]][missing_values[[i]] & !row(cov_matrix[[i]]) == col(cov_matrix[[i]])] <- 0
+
+  # Set missing variances to very large value
+  # large_value <- 10000
+  large_value <- (.Machine$double.eps)^(-1/3)
+  diag(cov_matrix[[i]])[missing_values[[i]][diag(TRUE, nrow(cov_matrix[[i]]))]] <- large_value
+
 }
 # View(cov_matrix)
 

@@ -4,8 +4,8 @@ library(dplyr)
 # GRAB MODEL OUTPUT
 ############################
 # Original
-source("inst/scripts/wranglingCleaning.R")
-source("inst/scripts/standardize.R")
+# source("inst/scripts/wranglingCleaning.R")
+# source("inst/scripts/standardize.R")
 # Updated with Kriging
 source("inst/scripts/wranglingCleaning_kriging.R")
 source("inst/scripts/standardize_kriging.R")
