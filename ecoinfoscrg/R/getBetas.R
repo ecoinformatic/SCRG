@@ -17,6 +17,12 @@ pensBetas <- readRDS("data/pens_non_parallel_new_average_betas.rds")
 IRLBetas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
 tampaBetas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
 
+# Standardize betas (Z-score)
+chocBetas[,1] <- (chocBetas[,1] + mean(chocBetas[,1]))/sd(chocBetas[,1])
+pensBetas[,1] <- (pensBetas[,1] + mean(pensBetas[,1]))/sd(pensBetas[,1])
+tampaBetas[,1] <- (tampaBetas[,1] + mean(tampaBetas[,1]))/sd(tampaBetas[,1])
+IRLBetas[,1] <- (IRLBetas[,1] + mean(IRLBetas[,1]))/sd(IRLBetas[,1])
+
 # Get predictors (excluding study and definitions)
 numeric_pred <- pred %>%
   select_if(is.numeric)
@@ -41,6 +47,7 @@ chocDF <- prepare_df(chocBetas, "choc")
 pensDF <- prepare_df(pensBetas, "pens")
 tampaDF <- prepare_df(tampaBetas, "tampa")
 IRLDF <- prepare_df(IRLBetas, "IRL")
+
 
 # Combine all dataframes
 combined_betas <- rbind(chocDF, pensDF, tampaDF, IRLDF)
@@ -104,6 +111,13 @@ combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
 ################################
 # EXTRA: SE (for effect size)
 ################################
+
+# Standardize SE (Z-score)
+chocBetas[,2] <- (chocBetas[,2] + mean(chocBetas[,2]))/sd(chocBetas[,2])
+pensBetas[,2] <- (pensBetas[,2] + mean(pensBetas[,2]))/sd(pensBetas[,2])
+tampaBetas[,2] <- (tampaBetas[,2] + mean(tampaBetas[,2]))/sd(tampaBetas[,2])
+IRLBetas[,2] <- (IRLBetas[,2] + mean(IRLBetas[,2]))/sd(IRLBetas[,2])
+
 # Function to convert model out put to dataframe (only keep "Estimate")
 prepare_se_df <- function(matrix, source) {
     df <- as.data.frame(t(matrix))
