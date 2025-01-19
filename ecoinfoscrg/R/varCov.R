@@ -55,6 +55,8 @@ for (i in 1:length(cov_matrix)) {
 }
 # View(cov_matrix)
 
+# save(cov_matrix, file = "../output/cov_matrices.rda")
+
 
 # Grab variances from each matrix
 VAR <- combined_betas_only  # simulate structure of combined betas dataframe
@@ -68,6 +70,7 @@ for (i in 1:nrow(VAR)) {
 
 # View(VAR)
 
+# save(VAR, file = "../output/variances.rda")
 
 
 

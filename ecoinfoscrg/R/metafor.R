@@ -59,58 +59,81 @@ betas <- combined_betas_only
 # epsilon <- 1e-6
 # adjusted_cov_matrix <- adjusted_cov_matrix + diag(epsilon, nrow(adjusted_cov_matrix))
 
-adjusted_cov_matrix <- list()
-# Adjustments to covariance matrices
-for (i in 1:length(cov_matrix)) {
 
-  cov_names <- dimnames(cov_matrix[[i]])  # save dimnames
+## FULL MATRIX ADJUSTMENT ##
 
-  eigen_decomp <- eigen(cov_matrix[[i]])
-  eigenvalues <- eigen_decomp$values
-  eigenvectors <- eigen_decomp$vectors
+# adjusted_cov_matrix <- list()
+# # Adjustments to covariance matrices
+# for (i in 1:length(cov_matrix)) {
+#
+#   cov_names <- dimnames(cov_matrix[[i]])  # save dimnames
+#
+#   eigen_decomp <- eigen(cov_matrix[[i]])
+#   eigenvalues <- eigen_decomp$values
+#   eigenvectors <- eigen_decomp$vectors
+#
+#
+#   # Find the smallest positive eigenvalue
+#   smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
+#
+#   # # Define the maximum allowed variance
+#   # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
+#
+#   # Adjust eigenvalues
+#   adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
+#   adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
+#   # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+#
+#   # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
+#   # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
+#   adjusted_cov_matrix[[i]] <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
+#
+#   # another check
+#   smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
+#   # smallest_eigenvalue
+#
+#   # Set very large variances to very large value
+#   large_value <- (.Machine$double.eps)^(-1/3)
+#   diag(adjusted_cov_matrix[[i]])[which(diag(adjusted_cov_matrix[[i]])>large_value)] <- large_value
+#
+#   #####
+#   # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
+#   epsilon <- 1e-6
+#   adjusted_cov_matrix[[i]] <- adjusted_cov_matrix[[i]] + diag(epsilon, nrow(adjusted_cov_matrix[[i]]))
+# ####
+#
+#   dimnames(adjusted_cov_matrix[[i]]) <- cov_names
+# }
+#
+# # Grab variances from each matrix
+# VAR <- combined_betas_only  # simulate structure of combined betas dataframe
+# for (i in 1:nrow(VAR)) {
+#   for (j in 1:ncol(VAR)) {
+#
+#     # Add variances to corresponding predictor and study
+#     VAR[i,j] <- diag(adjusted_cov_matrix[[i]])[which(names(diag(adjusted_cov_matrix[[i]])) == colnames(VAR)[j])]
+#   }
+# }
 
 
-  # Find the smallest positive eigenvalue
-  smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
+## VARIANCES ONLY ##
 
-  # # Define the maximum allowed variance
-  # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
-
-  # Adjust eigenvalues
-  adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
-  adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
-  # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
-
-  # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
-  # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
-  adjusted_cov_matrix[[i]] <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
-
-  # another check
-  smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
-  # smallest_eigenvalue
-
-  # Set very large variances to very large value
-  large_value <- (.Machine$double.eps)^(-1/3)
-  diag(adjusted_cov_matrix[[i]])[which(diag(adjusted_cov_matrix[[i]])>large_value)] <- large_value
-
-  #####
-  # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
-  epsilon <- 1e-6
-  adjusted_cov_matrix[[i]] <- adjusted_cov_matrix[[i]] + diag(epsilon, nrow(adjusted_cov_matrix[[i]]))
-####
-
-  dimnames(adjusted_cov_matrix[[i]]) <- cov_names
-}
-
-# Grab variances from each matrix
+# Grab variances from each unadjusted matrix
 VAR <- combined_betas_only  # simulate structure of combined betas dataframe
+adjusted_VAR <- VAR
 for (i in 1:nrow(VAR)) {
   for (j in 1:ncol(VAR)) {
 
     # Add variances to corresponding predictor and study
-    VAR[i,j] <- diag(adjusted_cov_matrix[[i]])[which(names(diag(adjusted_cov_matrix[[i]])) == colnames(VAR)[j])]
+    VAR[i,j] <- diag(cov_matrix[[i]])[which(names(diag(cov_matrix[[i]])) == colnames(VAR)[j])]
   }
+
+  adjusted_VAR[i,] <- pmax(VAR[i,], (.Machine$double.eps)^(1/3))
+  adjusted_VAR[i,] <- pmin(VAR[i,], (.Machine$double.eps)^(-1/3))
 }
+
+# adjusted_VAR <- pmax(VAR, (.Machine$double.eps)^(1/3))
+# adjusted_VAR <- pmin(VAR, (.Machine$double.eps)^(-1/3))
 
 ##############################
 # Meta-Analytic Regression
@@ -128,7 +151,8 @@ study_vector <- rep(study_labels, each = ncol(combined_betas_only))
 beta = betas_vector
 study = factor(study_vector)
 predictor = rep(colnames(combined_betas_only), times = length(study_labels))
-variance <- as.vector(t(VAR))
+variance <- as.vector(t(adjusted_VAR))
+# variance <- as.vector(t(VAR))
 # variance <- adjusted_cov_matrix
 # variance <- diag(adjusted_cov_matrix)
 
@@ -195,6 +219,7 @@ scale.betas <- function (thetas) {
   results <- list()
   scaled_betas <- combined_betas_only
   scaled_cov <- cov_matrix
+  scaled_var <- VAR
   gm_thetas <- prod(thetas)^(1/length(thetas))
   scalars.normalized <- thetas/gm_thetas
   for (i in 1:length(thetas)){
@@ -204,7 +229,11 @@ scale.betas <- function (thetas) {
   # need to fix in order to accommodate for per-site cov matrices
   # this can be easily implemented by taking each normalized scalar (theta/gm_thetas)
   # and then squaring them to obtain the cov matrix scalar for each site
-  cov.scalar <- prod(scalars.normalized^2)
+  # cov.scalar <- prod(scalars.normalized^2)
+  cov.scalar <- c(prod(scalars.normalized[1]^2),
+                  prod(scalars.normalized[2]^2),
+                  prod(scalars.normalized[3]^2),
+                  prod(scalars.normalized[4]^2))
 
   scaled_cov_adjusted <- list()
   scaled_cov_new <- list()
@@ -251,10 +280,67 @@ scale.betas <- function (thetas) {
   }
   #####
   #######
+
+  # VARIANCES
+  scaled_var_adjusted <- scaled_var
+  scaled_var_new <- scaled_var
+  for (i in 1:nrow(scaled_var)) {
+
+    # Scale variances
+    scaled_var_new[i,] <- cov.scalar[i]*scaled_var[i,]
+
+    # Adjustments to variance
+    scaled_var_adjusted[i,] <- pmax(scaled_var_new[i,], (.Machine$double.eps)^(1/3))
+    scaled_var_adjusted[i,] <- pmin(scaled_var_new[i,], (.Machine$double.eps)^(-1/3))
+
+  }
+  #####
+  #######
   results[[1]] <- scaled_betas
   results[[2]] <- scaled_cov_adjusted
+  results[[3]] <- scaled_var_adjusted
   return (results)
 }
+
+
+# ## VARIANCES ONLY ##
+# ## scale.betas for variances
+# scale.betas <- function (thetas) {
+#   results <- list()
+#   scaled_betas <- combined_betas_only
+#   scaled_var <- VAR
+#   scaled_cov <- cov_matrix
+#   gm_thetas <- prod(thetas)^(1/length(thetas))
+#   scalars.normalized <- thetas/gm_thetas
+#   for (i in 1:length(thetas)){
+#     scaled_betas[i, ] <- scaled_betas[i, ]*scalars.normalized[i]
+#   }
+#   # normalize it and then square
+#   # need to fix in order to accommodate for per-site cov matrices
+#   # this can be easily implemented by taking each normalized scalar (theta/gm_thetas)
+#   # and then squaring them to obtain the cov matrix scalar for each site
+#   cov.scalar <- prod(scalars.normalized^2)
+#
+#   scaled_var_adjusted <- scaled_var
+#   scaled_var_new <- scaled_var
+#   for (i in 1:nrow(scaled_var)) {
+#
+#     # Scale variances
+#     scaled_var_new[i,] <- cov.scalar[i]*scaled_var[i,]
+#
+#     # Adjustments to variance
+#     scaled_var_adjusted[i,] <- pmax(scaled_var_new[i,], (.Machine$double.eps)^(1/3))
+#     scaled_var_adjusted[i,] <- pmin(scaled_var_new[i,], (.Machine$double.eps)^(-1/3))
+#
+#   }
+#   #####
+#   #######
+#   results[[1]] <- scaled_betas
+#   results[[2]] <- scaled_cov_adjusted
+#   results[[3]] <- scaled_var_adjusted
+#   return (results)
+# }
+
 
 # Function to calculate log-likelihood of meta-analytic regression with given scaling parameters for beta
 # Takes in nr_thetas, meaning non-reference thetas: a vector of all thetas in order of study site, excluding the reference site
@@ -268,18 +354,35 @@ meta.ll <- function (nr_thetas) {
   #-----------------
   # Retrieve variances
   covs <- scaled_betas[[2]]  # extract scaled covariance matrices
-  scaled_VAR <- scaled_betas[[1]]  # simulate structure of combined betas dataframe
-  for (i in 1:length(thetas)) {
-    for (j in 1:ncol(scaled_VAR)) {
-      # Add variances to corresponding predictor and study
-      scaled_VAR[i,j] <- diag(covs[[i]])[which(names(diag(covs[[i]])) == colnames(scaled_VAR)[j])]
-    }
-  }
+  scaled_VAR <- scaled_betas[[3]]  # simulate structure of combined betas dataframe
+  # for (i in 1:length(thetas)) {
+  #   for (j in 1:ncol(scaled_VAR)) {
+  #     # Add variances to corresponding predictor and study
+  #     scaled_VAR[i,j] <- diag(covs[[i]])[which(names(diag(covs[[i]])) == colnames(scaled_VAR)[j])]
+  #   }
+  # }
   model <- meta_regression(beta = betas_vec, variance = as.vector(t(scaled_VAR)))
   ll <- model[["fit.stats"]]["ll", "ML"]
   return(ll)
-  # return(scaled_VAR)  ## NEGATIVE VARIANCES!!
 }
+
+
+# ## VARIANCES ONLY ##
+# ## meta.ll for variances
+# meta.ll <- function (nr_thetas) {
+#   thetas <- c(nr_thetas[0:(scale_reference-1)], 1, nr_thetas[scale_reference:length(nr_thetas)])
+#   scaled_betas <- scale.betas(thetas)
+#   #-----------------
+#   # Formatting betas to a format the meta_regression can take
+#   # Not sure if there is a more efficient way
+#   betas_vec <- as.vector(t(scaled_betas[[1]]))
+#   #-----------------
+#   # Retrieve variances
+#   covs <- scaled_betas[[3]]  # extract scaled variances
+#   model <- meta_regression(beta = betas_vec, variance = as.vector(t(covs)))
+#   ll <- model[["fit.stats"]]["ll", "ML"]
+#   return(ll)
+# }
 
 
 # Estimate scaling parameters theta by maximizing meta analytic regression likelihood (log likelihood is maximized here)
@@ -306,7 +409,7 @@ thetas <- c(thetas.maxll[["par"]][0:(scale_reference-1)], 1, thetas.maxll[["par"
 scaled_betas <- scale.betas(thetas)
 betas_vec <- as.vector(t(scaled_betas[[1]]))
 covs <- scaled_betas[[2]]
-scaled.meta <- meta_regression(beta = betas_vec, variance = diag(covs))
+scaled.meta <- meta_regression(beta = betas_vec, variance = as.vector(t(covs)))
 
 # saveRDS(scaled.meta, file = "../output/scaled_meta.rds")
 # saveRDS(scaled.meta, file=file.path("output", "scaled_meta.rds"))
