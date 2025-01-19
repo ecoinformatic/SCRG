@@ -78,7 +78,7 @@ for (i in 1:length(cov_matrix)) {
 
   # Adjust eigenvalues
   adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
-  # adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
+  adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
   # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
 
   # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
@@ -227,7 +227,7 @@ scale.betas <- function (thetas) {
 
     # Adjust eigenvalues
     adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
-    # adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
+    adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
     # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
 
     # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
