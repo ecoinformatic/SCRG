@@ -29,70 +29,88 @@ betas <- combined_betas_only
 
 
 ###########
-
-eigen_decomp <- eigen(cov_matrix)
-eigenvalues <- eigen_decomp$values
-eigenvectors <- eigen_decomp$vectors
-
-
-# Find the smallest positive eigenvalue
-smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
-
-# # Define the maximum allowed variance
-# max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
-
-# Adjust eigenvalues
-adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
-adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
-# adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
-
-# adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
-# adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
-adjusted_cov_matrix <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
-
-# another check
-smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
-# smallest_eigenvalue
-
-#####
-# Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
-epsilon <- 1e-6
-adjusted_cov_matrix <- adjusted_cov_matrix + diag(epsilon, nrow(adjusted_cov_matrix))
-
-# adjusted_cov_matrix <- list()
-# # Adjustments to covariance matrices
-# for (i in 1:length(cov_matrix)) {
 #
-#   eigen_decomp <- eigen(cov_matrix[[i]])
-#   eigenvalues <- eigen_decomp$values
-#   eigenvectors <- eigen_decomp$vectors
+# eigen_decomp <- eigen(cov_matrix)
+# eigenvalues <- eigen_decomp$values
+# eigenvectors <- eigen_decomp$vectors
 #
 #
-#   # Find the smallest positive eigenvalue
-#   smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
+# # Find the smallest positive eigenvalue
+# smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
 #
-#   # # Define the maximum allowed variance
-#   # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
+# # # Define the maximum allowed variance
+# # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
 #
-#   # Adjust eigenvalues
-#   adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
-#   adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
-#   # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+# # Adjust eigenvalues
+# adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
+# adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
+# # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
 #
-#   # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
-#   # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
-#   adjusted_cov_matrix[[i]] <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
+# # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
+# # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
+# adjusted_cov_matrix <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
 #
-#   # another check
-#   smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
-#   # smallest_eigenvalue
+# # another check
+# smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
+# # smallest_eigenvalue
 #
-#   #####
-#   # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
-#   epsilon <- 1e-6
-#   adjusted_cov_matrix[[i]] <- adjusted_cov_matrix[[i]] + diag(epsilon, nrow(adjusted_cov_matrix[[i]]))
-#####
-# }
+# #####
+# # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
+# epsilon <- 1e-6
+# adjusted_cov_matrix <- adjusted_cov_matrix + diag(epsilon, nrow(adjusted_cov_matrix))
+
+adjusted_cov_matrix <- list()
+# Adjustments to covariance matrices
+for (i in 1:length(cov_matrix)) {
+
+  cov_names <- dimnames(cov_matrix[[i]])  # save dimnames
+
+  eigen_decomp <- eigen(cov_matrix[[i]])
+  eigenvalues <- eigen_decomp$values
+  eigenvectors <- eigen_decomp$vectors
+
+
+  # Find the smallest positive eigenvalue
+  smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
+
+  # # Define the maximum allowed variance
+  # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
+
+  # Adjust eigenvalues
+  adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
+  # adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
+  # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+
+  # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
+  # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
+  adjusted_cov_matrix[[i]] <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
+
+  # another check
+  smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
+  # smallest_eigenvalue
+
+  # Set very large variances to very large value
+  large_value <- (.Machine$double.eps)^(-1/3)
+  diag(adjusted_cov_matrix[[i]])[which(diag(adjusted_cov_matrix[[i]])>large_value)] <- large_value
+
+  #####
+  # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
+  epsilon <- 1e-6
+  adjusted_cov_matrix[[i]] <- adjusted_cov_matrix[[i]] + diag(epsilon, nrow(adjusted_cov_matrix[[i]]))
+####
+
+  dimnames(adjusted_cov_matrix[[i]]) <- cov_names
+}
+
+# Grab variances from each matrix
+VAR <- combined_betas_only  # simulate structure of combined betas dataframe
+for (i in 1:nrow(VAR)) {
+  for (j in 1:ncol(VAR)) {
+
+    # Add variances to corresponding predictor and study
+    VAR[i,j] <- diag(adjusted_cov_matrix[[i]])[which(names(diag(adjusted_cov_matrix[[i]])) == colnames(VAR)[j])]
+  }
+}
 
 ##############################
 # Meta-Analytic Regression
@@ -110,9 +128,9 @@ study_vector <- rep(study_labels, each = ncol(combined_betas_only))
 beta = betas_vector
 study = factor(study_vector)
 predictor = rep(colnames(combined_betas_only), times = length(study_labels))
-# variance <- cov_matrix
+variance <- as.vector(t(VAR))
 # variance <- adjusted_cov_matrix
-variance <- diag(adjusted_cov_matrix)
+# variance <- diag(adjusted_cov_matrix)
 
 # FUNCTION FOR CALLING rma.mv (# `meta_regression` will run with default options )
 meta_regression <- function(
@@ -133,8 +151,8 @@ meta_regression <- function(
     yi = beta,          # Vector of all beta coefficients
     V = variance,       # Vector of sampling variances or variance-covariance matrix
     method = method,    # Method for the meta-analysis
-    random = ~ 1 | study,  # Random effects for studies (contact authors to understand if they had random effects or separate regressions)
-    struct = struct,    # Structure of the variance-covariance matrix
+    # random = ~ 1 | study,  # Random effects for studies (contact authors to understand if they had random effects or separate regressions)
+    # struct = struct,    # Structure of the variance-covariance matrix
     mods = ~ predictor, # Including predictors as fixed effects
     verbose = verbose   # Verbosity of the output
   )
@@ -144,8 +162,8 @@ meta_regression <- function(
 
 unscaled.meta <- meta_regression()
 
-# saveRDS(unscaled.meta, file = "../output/unscaled_metas.rds")  # file.path("output", "unscaled_meta.rds"))
-# unscaled.meta <- readRDS("output/unscaled_meta.rds")
+# saveRDS(unscaled.meta, file = "../output/unscaled_meta.rds")  # file.path("output", "unscaled_meta.rds"))
+# unscaled.meta <- readRDS("../output/unscaled_meta.rds")
 
 
 # output <- meta_regression()
@@ -187,36 +205,50 @@ scale.betas <- function (thetas) {
   # this can be easily implemented by taking each normalized scalar (theta/gm_thetas)
   # and then squaring them to obtain the cov matrix scalar for each site
   cov.scalar <- prod(scalars.normalized^2)
-  scaled_cov <- cov.scalar*scaled_cov
 
-  ####### cov matrix adjustments
-  eigen_decomp <- eigen(scaled_cov)
-  eigenvalues <- eigen_decomp$values
-  eigenvectors <- eigen_decomp$vectors
+  scaled_cov_adjusted <- list()
+  scaled_cov_new <- list()
+  for (i in 1:length(scaled_cov)) {
+    cov.names <- dimnames(scaled_cov[[i]])  # save dimnames
 
-  # Find the smallest positive eigenvalue
-  smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
+    # Scale covariance matrices
+    scaled_cov_new[[i]] <- cov.scalar[i]*scaled_cov[[i]]
 
-  # # Define the maximum allowed variance
-  # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
+    ####### cov matrix adjustments
+    eigen_decomp <- eigen(scaled_cov[[i]])
+    eigenvalues <- eigen_decomp$values
+    eigenvectors <- eigen_decomp$vectors
 
-  # Adjust eigenvalues
-  adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
-  adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
-  # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
+    # Find the smallest positive eigenvalue
+    smallest_eigenvalue <- min(eigenvalues[eigenvalues > 0])
 
-  # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
-  # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
-  scaled_cov_adjusted <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
+    # # Define the maximum allowed variance
+    # max_allowed_variance <- sqrt(1 / .Machine$double.eps) * smallest_eigenvalue
 
-  # another check
-  smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
-  # smallest_eigenvalue
+    # Adjust eigenvalues
+    adjusted_eigenvalues <- pmax(eigenvalues, (.Machine$double.eps)^(1/3))
+    # adjusted_eigenvalues <- pmin(eigenvalues, (.Machine$double.eps)^(-1/3))
+    # adjusted_eigenvalues <- pmin(eigenvalues, max_allowed_variance)
 
-  #####
-  # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
-  epsilon <- 1e-6
-  scaled_cov_adjusted <- scaled_cov_adjusted + diag(epsilon, nrow(scaled_cov_adjusted))
+    # adjusted_eigenvalues <- pmax(adjusted_eigenvalues, (.Machine$double.eps)^(1/3))
+    # adjusted_eigenvalues <- pmin(adjusted_eigenvalues, (.Machine$double.eps)^(-1/3))
+    scaled_cov_adjusted[[i]] <- eigenvectors %*% diag(adjusted_eigenvalues) %*% t(eigenvectors)
+
+    # another check
+    smallest_eigenvalue <- min(adjusted_eigenvalues[adjusted_eigenvalues > 0])
+    # smallest_eigenvalue
+
+    # Set very large variances to very large value
+    large_value <- (.Machine$double.eps)^(-1/3)
+    diag(scaled_cov_adjusted[[i]])[which(diag(scaled_cov_adjusted[[i]])>large_value)] <- large_value
+
+    #####
+    # Recommendation: Add a small jitter to the diagonal to ensure positive definiteness
+    epsilon <- 1e-6
+    scaled_cov_adjusted[[i]] <- scaled_cov_adjusted[[i]] + diag(epsilon, nrow(scaled_cov_adjusted[[i]]))
+
+    dimnames(scaled_cov_adjusted[[i]]) <- cov.names
+  }
   #####
   #######
   results[[1]] <- scaled_betas
@@ -234,10 +266,19 @@ meta.ll <- function (nr_thetas) {
   # Not sure if there is a more efficient way
   betas_vec <- as.vector(t(scaled_betas[[1]]))
   #-----------------
-  covs <- scaled_betas[[2]]
-  model <- meta_regression(beta = betas_vec, variance = diag(covs))
+  # Retrieve variances
+  covs <- scaled_betas[[2]]  # extract scaled covariance matrices
+  scaled_VAR <- scaled_betas[[1]]  # simulate structure of combined betas dataframe
+  for (i in 1:length(thetas)) {
+    for (j in 1:ncol(scaled_VAR)) {
+      # Add variances to corresponding predictor and study
+      scaled_VAR[i,j] <- diag(covs[[i]])[which(names(diag(covs[[i]])) == colnames(scaled_VAR)[j])]
+    }
+  }
+  model <- meta_regression(beta = betas_vec, variance = as.vector(t(scaled_VAR)))
   ll <- model[["fit.stats"]]["ll", "ML"]
   return(ll)
+  # return(scaled_VAR)  ## NEGATIVE VARIANCES!!
 }
 
 
@@ -248,11 +289,16 @@ meta.ll <- function (nr_thetas) {
 # optim.results <- optim(c(1,1,1), fn=meta.ll, method="L-BFGS-B", control = list(fnscale = -1))
 optim.results <- optim(c(1,1,1), fn=meta.ll, control=list(fnscale=-1))
 
+## ERROR: Error in rma.mv(yi = beta, V = variance, method = method, mods = ~predictor,  :
+##        Processing terminated since k <= 1.
+
+# saveRDS(optim.results, file = "../output/scaling_thetas.rds")
 # saveRDS(optim.results, file=file.path("output", "scaling_thetas.rds"))
 # saveRDS(optim.results, file=file.path("output", "scaling_thetas_LBFGSB.rds"))
 #
 # thetas.maxll <- readRDS("output/scaling_thetas.rds")
 # thetas.maxll <- readRDS("output/scaling_thetas_LBFGSB.rds")
+thetas.maxll <- readRDS("../output/scaling_thetas.rds")
 
 #-----------------
 # Fitting model with new thetas
@@ -262,8 +308,11 @@ betas_vec <- as.vector(t(scaled_betas[[1]]))
 covs <- scaled_betas[[2]]
 scaled.meta <- meta_regression(beta = betas_vec, variance = diag(covs))
 
+# saveRDS(scaled.meta, file = "../output/scaled_meta.rds")
 # saveRDS(scaled.meta, file=file.path("output", "scaled_meta.rds"))
 # scaled.meta <- readRDS("output/scaled_meta.rds")
+scaled.meta <- readRDS("../output/scaled_meta.rds")
+
 #-----------------
 unscaled.meta[["fit.stats"]]["ll", "ML"]
 scaled.meta[["fit.stats"]]["ll", "ML"]
