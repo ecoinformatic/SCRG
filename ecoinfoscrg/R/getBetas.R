@@ -7,8 +7,8 @@ library(dplyr)
 # source("inst/scripts/wranglingCleaning.R")
 # source("inst/scripts/standardize.R")
 # Updated with Kriging
-source("inst/scripts/wranglingCleaning_kriging.R")
-source("inst/scripts/standardize_kriging.R")
+# source("inst/scripts/wranglingCleaning_kriging.R")
+# source("inst/scripts/standardize_kriging.R")
 pred <- readRDS("data/predictors_kriged_standardized.rds")
 pred <- as.data.frame(pred)  # convert to dataframe so "geometry" is not selected
 
