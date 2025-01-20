@@ -9,7 +9,7 @@ pred$study <- NULL
 pred$SMMv5Def <- NULL
 predictor_data <- pred
 
-# convert to right format for matix multiplicatrion
+# convert to right format for matrix multiplication
 average_betas_vector <- as.numeric(average_betas[1, ])
 predictor_matrix <- as.matrix(predictor_data)
 
@@ -19,6 +19,63 @@ expected_outcome <- as.matrix(predictor_data) %*% average_betas_vector
 
 # Print the expected outcomes
 # print(expected_outcome)
+
+
+## NEW MODEL ##
+
+# Load requisite packages
+library(dplyr)
+
+# Import meta-analytic regression model
+meta_analysis <- readRDS("../output/scaled_meta.rds")  # scaled model
+meta_analysis <- readRDS("../output/unscaled_meta.rds")  # unscaled model
+
+# Retrieve studies for predictions
+pred <- readRDS("data/predictors_kriged_standardized.rds")
+colnames(pred)[41] <- "predicted_OLD"  # rename to compare to new predictions
+predictor_data <- pred
+predictors <- meta_analysis$data$predictor[1:248]  # retrieve predictors
+
+# Remove non-predictor columns
+predictor_data <- predictor_data %>%
+  select(all_of(predictors)) %>%
+  select(order(colnames(.)))
+# Reformat predictor columns
+predictor_data <- predictor_data %>%
+  mutate(across(all_of(predictors), as.character)) %>% # convert predictors to character first (needed for factorized columns)
+  mutate(across(all_of(predictors), as.numeric)) %>% # convert all predictors to numeric
+  mutate(across(all_of(predictors), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))  # sub NAs for statewide means
+## NAs in the data can result in predicted values to be NA
+
+## CALCULATE AND STORE STATEWIDE MEANS FOR PREDICTORS AS FILL-INS FOR EMPTY/MISSING PREDICTORS
+
+# Extract coefficients and intercept from final meta-analysis model
+betas <- meta_analysis$beta
+# Remove "predictor" from predictor names
+rownames(betas) <- gsub("predictor", "", rownames(betas))  # match predictor names
+setdiff(colnames(predictor_data), rownames(betas))  # which predictor used as the intercept?
+rownames(betas)[1] <- setdiff(colnames(predictor_data), rownames(betas))  # replace with predictor name
+betas <- as.vector(betas)
+
+# # Create the new model matrix and remove the intercept
+# predgrid <- model.matrix(~predictors, data = predictor_data)[,-1]  ## TEST ##
+# colnames(predgrid) <- gsub("predictors", "predictor", colnames(predgrid))
+#
+# test <- metafor::predict.rma(meta_analysis, newmods = predictor_data)
+
+# Multiply predictors by the meta-analysis model betas
+expected_outcome <- as.matrix(predictor_data) %*% betas
+
+# Inverse probit for predicted values
+predicted <- pnorm(expected_outcome)
+
+
+# predicted3 <- predict(meta_analysis, transf=pnorm)  ## ????
+#
+# predicted <- mcp::iprobit(expected_outcome)  # Error: 'iprobit' is not an exported object from 'namespace:mcp'
+
+
+
 
 ############### TESTING #############
 coo <- c("OBJECTID", "ID", "geometry", "feature_x", "feature_y", "nearest_x", "nearest_y", "shape__len", "Shape__Len", "distance", "distance_2", "n", "x", "y", "X", "Y")
