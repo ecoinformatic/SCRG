@@ -294,6 +294,10 @@ scale.betas <- function (thetas) {
     scaled_var_adjusted[i,] <- pmin(scaled_var_new[i,], (.Machine$double.eps)^(-1/3))
 
   }
+
+  DEBUG <<- list(thetas = thetas, GM = gm_thetas, scalars = scalars.normalized,
+                 beta = scaled_betas, variance = scaled_var_adjusted)
+
   #####
   #######
   results[[1]] <- scaled_betas
@@ -344,7 +348,8 @@ scale.betas <- function (thetas) {
 
 # Function to calculate log-likelihood of meta-analytic regression with given scaling parameters for beta
 # Takes in nr_thetas, meaning non-reference thetas: a vector of all thetas in order of study site, excluding the reference site
-meta.ll <- function (nr_thetas) {
+meta.ll <- function (log.thetas) {
+  nr_thetas <- exp(log.thetas)  # exponentiate after optimizing log.thetas
   thetas <- c(nr_thetas[0:(scale_reference-1)], 1, nr_thetas[scale_reference:length(nr_thetas)])
   scaled_betas <- scale.betas(thetas)
   #-----------------
@@ -361,28 +366,11 @@ meta.ll <- function (nr_thetas) {
   #     scaled_VAR[i,j] <- diag(covs[[i]])[which(names(diag(covs[[i]])) == colnames(scaled_VAR)[j])]
   #   }
   # }
+
   model <- meta_regression(beta = betas_vec, variance = as.vector(t(scaled_VAR)))
   ll <- model[["fit.stats"]]["ll", "ML"]
   return(ll)
 }
-
-
-# ## VARIANCES ONLY ##
-# ## meta.ll for variances
-# meta.ll <- function (nr_thetas) {
-#   thetas <- c(nr_thetas[0:(scale_reference-1)], 1, nr_thetas[scale_reference:length(nr_thetas)])
-#   scaled_betas <- scale.betas(thetas)
-#   #-----------------
-#   # Formatting betas to a format the meta_regression can take
-#   # Not sure if there is a more efficient way
-#   betas_vec <- as.vector(t(scaled_betas[[1]]))
-#   #-----------------
-#   # Retrieve variances
-#   covs <- scaled_betas[[3]]  # extract scaled variances
-#   model <- meta_regression(beta = betas_vec, variance = as.vector(t(covs)))
-#   ll <- model[["fit.stats"]]["ll", "ML"]
-#   return(ll)
-# }
 
 
 # Estimate scaling parameters theta by maximizing meta analytic regression likelihood (log likelihood is maximized here)
@@ -390,10 +378,8 @@ meta.ll <- function (nr_thetas) {
 # try L-BFGS-B
 
 # optim.results <- optim(c(1,1,1), fn=meta.ll, method="L-BFGS-B", control = list(fnscale = -1))
-optim.results <- optim(c(1,1,1), fn=meta.ll, control=list(fnscale=-1))
+optim.results <- optim(c(0,0,0), fn=meta.ll, control=list(fnscale=-1))
 
-## ERROR: Error in rma.mv(yi = beta, V = variance, method = method, mods = ~predictor,  :
-##        Processing terminated since k <= 1.
 
 # saveRDS(optim.results, file = "../output/scaling_thetas.rds")
 # saveRDS(optim.results, file=file.path("output", "scaling_thetas.rds"))
@@ -405,11 +391,15 @@ thetas.maxll <- readRDS("../output/scaling_thetas.rds")
 
 #-----------------
 # Fitting model with new thetas
-thetas <- c(thetas.maxll[["par"]][0:(scale_reference-1)], 1, thetas.maxll[["par"]][scale_reference:length(thetas.maxll[["par"]])])
+exp.thetas <- exp(thetas.maxll[["par"]])
+thetas <- c(exp.thetas[0:(scale_reference-1)], 1, exp.thetas[scale_reference:length(exp.thetas)])
+# thetas.normalized <- thetas/(prod(thetas)^(1/length(thetas)))  # for checking thetas
 scaled_betas <- scale.betas(thetas)
 betas_vec <- as.vector(t(scaled_betas[[1]]))
 covs <- scaled_betas[[2]]
-scaled.meta <- meta_regression(beta = betas_vec, variance = as.vector(t(covs)))
+scaled_VAR <- scaled_betas[[3]]
+# Scaled meta-analytic regression model
+scaled.meta <- meta_regression(beta = betas_vec, variance = as.vector(t(scaled_VAR)))
 
 # saveRDS(scaled.meta, file = "../output/scaled_meta.rds")
 # saveRDS(scaled.meta, file=file.path("output", "scaled_meta.rds"))
