@@ -295,8 +295,8 @@ scale.betas <- function (thetas) {
 
   }
 
-  DEBUG <<- list(thetas = thetas, GM = gm_thetas, scalars = scalars.normalized,
-                 beta = scaled_betas, variance = scaled_var_adjusted)
+  # DEBUG <<- list(thetas = thetas, GM = gm_thetas, scalars = scalars.normalized,
+  #                beta = scaled_betas, variance = scaled_var_adjusted)
 
   #####
   #######
