@@ -486,16 +486,28 @@ standardize <- function(data,
   # Save standardization MEAN and SD
   pred_num <- pred %>%
     select(all_of(numerical_vars))  # store numeric variables
-  MEAN <- colMeans(pred_num, na.rm = TRUE)
-  assign("standardization_MEANs", value = MEAN)
+  # MEAN <<- colMeans(pred_num, na.rm = TRUE)
+  # # assign("standardization_MEANs", value = MEAN)
+  #
+  # SD <- apply(pred_num, 2, sd, na.rm = TRUE)
+  # names(SD) <- names(MEAN)
+  # SD <<- SD
+  # # assign("standardization_SD", value = SD)
 
-  SD <- apply(pred_num, 2, sd, na.rm = TRUE)
-  names(SD) <- names(MEAN)
-  assign("standardization_SD", value = SD)
+  # Load mean and sd to use for standardization
+  load("R/standardization_mean.rda")
+  load("R/standardization_sd.rda")
 
   # Standardize numeric predictors
+  # pred <- pred %>%
+  #   mutate(across(all_of(numerical_vars), ~ (.-MEAN)/SD))
+
+  for(i in 1:ncol(pred_num)) {
+    pred_num[,i] <- (pred_num[,i] - MEAN[i])/SD[i]
+  }
   pred <- pred %>%
-    mutate(across(all_of(numerical_vars), ~ (.-mean(., na.rm = TRUE))/sd(., na.rm = TRUE)))
+    select(-all_of(numerical_vars))  # remove OG numeric vars
+  pred <- cbind(pred, pred_num)  # add standardized numeric vars
   ## Must use same mean and sd to standardize (transform) any new data
 
   # Update list of items to return
