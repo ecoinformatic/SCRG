@@ -3,38 +3,86 @@
 ############################################
 # library(nnet)
 # library(lme4)
-library(MASS)
+# library(MASS)
 # library(ordinal)
+# library(glmmTMB)
+# library(ordbetareg)
+source("R/ordinal.R")
 
 # Initial empty model
 # Note that `best_formula` starts with `initial_formula` as baseline
 # initial_formula <- as.formula(paste(response_var, "~ 1 + (1|study)"))
+# initial_formula <- as.formula(paste(response_var, "~ (1|study)"))
 initial_formula <- as.formula(paste(response_var, "~ 1"))
 best_formula <- initial_formula
 
+# Save number of predictors
+# k <- length(strsplit(as.character(best_formula[3]), split = " + ", fixed = TRUE)) - 1
+# k <- length(all.vars(best_formula)) - 1  # this one works
+
 # best_model <- multinom(best_formula, data = data, MaxNWts = 5000) #nnet
-# best_model <- lmer(best_formula, data = input) # lme4
+# best_model <- lme4::lmer(best_formula, data = input) # lme4
 # best_model <- polr(best_formula, data = input, method = "probit") # MASS
-best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
+# best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
+# best_model <- ordinal::clmm(best_formula, data = input, Hess = TRUE,
+#                            link = "probit", threshold = "equidistant")
+# best_model <- glmmTMB::glmmTMB(best_formula, data = input,
+#                                family = glmmTMB::ordbeta(link = "probit"))
+# best_model <- ordbetareg::ordbetareg(best_formula, data = input, true_bounds = c(1,3))
+best_model <- ordinal(best_formula, data = input)
+
+# best_mod_dmatrix <- ordinal::clm(formula = best_formula, data = input,
+#                                  link = "probit", start = c(1/3, 2/3, rep(0, k)),
+#                                  control = list(method = "design",  # try adjusting tolerances to get convergence
+#                                                 lower = c(1/3 - .Machine$double.eps, 2/3 - .Machine$double.eps, rep(-Inf, k)),
+#                                                 upper = c(1/3 + .Machine$double.eps, 2/3 - .Machine$double.eps, rep(+Inf, k))))
+# best_mod_dmatrix$control$method <- "optim"
+# best_model <- clm.fit(best_mod_dmatrix)
+
+# best_model <- ordinal::clm(best_formula, data = input, Hess = TRUE,
+#                            method = "optim", link = "probit", threshold = "symmetric")
 # control_settings <- clmm.control(maxIter = 2000)  # clmm stuff
 # best_model <- clmm(best_formula, data = input, control = control_settings, link = "probit") # ordinal
 # best_model <- glmer(best_formula, data = input, family=binomial(link="probit"))
 # best_model <- glm(best_formula, data = input, family=binomial(link="probit"))
 # glmer(Response ~ (1 | study) + Beach_1, data = input, family=binomial(link="probit"))
 
-best_aic <- AIC(best_model)
+best_aic <- best_model$AIC
+# best_aic <- AIC(best_model)
+# best_aic <- (2*length(best_model$coefficients)) + (2*best_model$logLik)
 name_prefix <- gsub(" ", "_", name) # add underscores
 ############################################
 # BUILD-UP PHASE
 ############################################
 # Function to fit and evaluate models (similar to Chris' only with a multinomial logistic regression for this specific dataset)
 fit_model <- function(formula, data) {
-  # model <- lmer(formula, data = data)
+  # model <- lme4::lmer(formula, data = data)
   # model <- clmm(formula, data = data, link = "probit")
   # model <- polr(formula, data = data, method = "probit")
   tryCatch({ # NEW LINE
-    model <- polr(formula, data = data, Hess=TRUE, method="probit")
-    aic <- AIC(model) # NEW LINE
+    # model <- lme4::lmer(formula, data = data)
+    # model <- polr(formula, data = data, Hess=TRUE, method="probit")
+    # model <- ordinal::clm(formula, data = data, Hess = TRUE, method = "optim", link = "probit")
+    # k <- length(strsplit(as.character(formula[3]), split = " + ", fixed = TRUE))
+    # model <- ordbetareg::ordbetareg(formula, data = data, true_bounds = c(1,3))
+    model <- ordinal(formula, data = data)
+
+    # model <- glmmTMB::glmmTMB(formula, data = data, family = glmmTMB::ordbeta(link = "probit"))
+
+    # k <- length(all.vars(formula)) - 1
+    # mod_dmatrix <- ordinal::clm(formula, data = data,
+    #                             link = "probit", start = c(1/3, 2/3, rep(0, k)),
+    #                             control = list(method = "design",  # try adjusting tolerances to get convergence
+    #                                            lower = c(1/3 - .Machine$double.eps, 2/3 - .Machine$double.eps, rep(-Inf, k)),
+    #                                            upper = c(1/3 + .Machine$double.eps, 2/3 - .Machine$double.eps, rep(+Inf, k))))
+    # mod_dmatrix$control$method <- "optim"
+    # model <- clm.fit(mod_dmatrix)
+
+    # model <- ordinal::clmm(formula, data = input, Hess = TRUE,
+    #                        link = "probit", threshold = "equidistant")
+    aic <- model$AIC
+    # aic <- AIC(model) # NEW LINE
+    # aic <- (2*length(model$coefficients)) + (2*model$logLik)
     return(list(model = model, aic = aic, error = NULL))
   }, error = function(e) { # NEW LINE
     return(list(model = NULL, aic = Inf, error = e$message))
@@ -45,16 +93,19 @@ fit_model <- function(formula, data) {
 for (i in 1:length(predictors)) {
     current_predictors <- all.vars(best_formula)[-1]
     remaining_predictors <- setdiff(predictors, current_predictors)
+    # k <- length(current_predictors)  # number of parameters for each model to test
+
     candidate_models <- list()  # for storing model and their AIC
     # Build models iteratively based on current best model
     for (predictor in remaining_predictors) {
-        new_formula <- update(best_formula, paste(". ~ . +", predictor))
-        formula_str <- paste(deparse(new_formula, width.cutoff = 500), collapse = "") # converts model formulat to string. Note that the width.cutoff and collapse are EXTREMELY important or deparse will split your string into two lines by default
+        # new_formula <- update(best_formula, paste(". ~ . +", predictor))
+        new_formula <- update(best_formula, paste0("~ . +", predictor))
+        formula_str <- paste0(deparse(new_formula, width.cutoff = 500), collapse = "") # converts model formula to string. Note that the width.cutoff and collapse are EXTREMELY important or deparse will split your string into two lines by default
         fit <- fit_model(new_formula, input)
         if (!is.null(fit$error)) { # NEW LINE
         # Log error if predictor is bad # NEW LINE
           cat("Error for predictor", predictor, ":", fit$error, "\n") # NEW LINE
-          next  # Skip to next iteration if errror # NEW LINE
+          next  # Skip to next iteration if error # NEW LINE
         } # NEW LINE
         candidate_models[[formula_str]] <- fit$aic # store the new model and AIC in cadidate model list
         print(paste("Testing build-up formula:", formula_str, "with AIC:", fit$aic)) # helpful output
@@ -82,9 +133,28 @@ for (i in 1:length(predictors)) {
 #####
 # Final model
 # best_model <- multinom(best_formula, data = data, MaxNWts = 5000, trace = FALSE)
-# best_model <- lmer(best_formula, data = input)
+# best_model <- lme4::lmer(best_formula, data = input)
 # best_model <- clmm(best_formula, data = input, link = "probit")
-best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
+# best_model <- polr(best_formula, data = input, Hess=TRUE, method="probit")
+# best_model <- ordinal::clm(best_formula, data = input, Hess = TRUE,
+#                            method = "optim", link = "probit", threshold = "symmetric")
+# best_model <- ordinal::clmm(best_formula, data = input, Hess = TRUE,
+#                             link = "probit", threshold = "equidistant")
+# best_model <- ordbetareg::ordbetareg(best_formula, data = input, true_bounds = c(1,3))
+best_model <- ordinal(best_formula, data = input)
+
+# best_model <- glmmTMB::glmmTMB(best_formula, data = input,
+#                                family = glmmTMB::ordbeta(link = "probit"))
+
+# k <- length(all.vars(best_formula)) - 1
+# best_mod_dmatrix <- ordinal::clm(formula = best_formula, data = input,
+#                                  link = "probit", start = c(1/3, 2/3, rep(0, k)),
+#                                  control = list(method = "design",  # try adjusting tolerances to get convergence
+#                                                 lower = c(1/3 - .Machine$double.eps, 2/3 - .Machine$double.eps, rep(-Inf, k)),
+#                                                 upper = c(1/3 + .Machine$double.eps, 2/3 - .Machine$double.eps, rep(+Inf, k))))
+# best_mod_dmatrix$control$method <- "optim"
+# best_model <- clm.fit(best_mod_dmatrix)
+
 # summary(best_model)
 ############################################
 # PAIR-DOWN PHASE
@@ -94,11 +164,35 @@ current_formula <- best_formula  # start with best FORMULA from build-up phase
 repeat {
   predictors_in_model <- all.vars(current_formula)[-1]  # get all predictors currently in the best model
   candidate_models <- list() # list to store models and AIC
-  # current_model <- lmer(current_formula, data = input)
+  # current_model <- lme4::lmer(current_formula, data = input)
   # current_model <- clmm(current_formula, data = input, link = "probit")
-  current_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
+  # LM_PD <- lm(current_formula, data = input)
+  # current_model <- polr(current_formula, data = input, start = c(LM_PD$coefficients[-1], qnorm(c(1/3,2/3))),
+  #                       Hess=TRUE, method="probit")
+  # current_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
+  # current_model <- ordinal::clm(current_formula, data = input, Hess = TRUE,
+  #                               method = "optim", link = "probit", threshold = "symmetric")
+  # current_model <- ordinal::clmm(current_formula, data = input, Hess = TRUE,
+  #                               link = "probit", threshold = "equidistant")
+  # current_model <- ordbetareg::ordbetareg(current_formula, data = input, true_bounds = c(1,3))
+  current_model <- ordinal(current_formula, data = input)
+
+  # current_model <- glmmTMB::glmmTMB(current_formula, data = input,
+  #                                   family = glmmTMB::ordbeta(link = "probit"))
+
+  # k <- length(all.vars(current_formula)) - 1
+  # current_mod_dmatrix <- ordinal::clm(current_formula, data = input,
+  #                             link = "probit", start = c(1/3, 2/3, rep(0, k)),
+  #                             control = list(method = "design",  # try adjusting tolerances to get convergence
+  #                                            lower = c(1/3 - .Machine$double.eps, 2/3 - .Machine$double.eps, rep(-Inf, k)),
+  #                                            upper = c(1/3 + .Machine$double.eps, 2/3 - .Machine$double.eps, rep(+Inf, k))))
+  # current_mod_dmatrix$control$method <- "optim"
+  # current_model <- clm.fit(current_mod_dmatrix)
+
   # current_aic <- AIC(multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)) # calculate AIC of current best model
-  current_aic <- AIC(current_model)
+  current_AIC <- current_model$AIC
+  # current_aic <- AIC(current_model)
+  # current_aic <- (2*length(current_model$coefficients)) + (2*current_model$logLik)
 
   for (predictor in predictors_in_model) { # Loop through each predictors to test their removal
     pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+"))) # New formula without current predictor
@@ -107,7 +201,8 @@ repeat {
     }
     # pairdown_aic <- AIC(multinom(pairdown_formula, data = data, MaxNWts = 5000, trace = FALSE)) # fit pairdown model, get AIC
     fit <- fit_model(pairdown_formula, input)
-    formula_str <- paste(deparse(pairdown_formula, width.cutoff = 500), collapse = "") # store the name/string of the model properly
+    # formula_str <- paste(deparse(pairdown_formula, width.cutoff = 500), collapse = "") # store the name/string of the model properly
+    formula_str <- deparse(pairdown_formula, width.cutoff = 500)
     candidate_models[formula_str] <- fit$aic # Store AIC and formula of pairdown model
     print(paste("Testing pairdown formula:", deparse(pairdown_formula), "with AIC:", fit$aic)) # Helpful output
   }
@@ -131,12 +226,31 @@ repeat {
 }
 # Final pairdown model
 # final_model <- multinom(current_formula, data = data, MaxNWts = 5000, trace = FALSE)
-# final_model <- lmer(current_formula, data = input)
+# final_model <- lme4::lmer(current_formula, data = input)
 # final_model <- clmm(current_formula, data = input, link = "probit")
-final_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
+# final_model <- polr(current_formula, data = input, Hess=TRUE, method="probit")
+# final_model <- ordinal::clm(current_formula, data = input, Hess = TRUE,
+#                             method = "optim", link = "probit", threshold = "symmetric")
+# final_model <- ordinal::clmm(current_formula, data = input, Hess = TRUE,
+#                            link = "probit", threshold = "equidistant")
+# final_model <- ordbetareg::ordbetareg(current_formula, data = input, true_bounds = c(1,3))
+final_model <- ordinal(current_formula, data = input)
+
+# final_model <- glmmTMB::glmmTMB(current_formula, data = input,
+#                                 family = glmmTMB::ordbeta(link = "probit"))
+
+# k <- length(all.vars(current_formula)) - 1
+# final_mod_dmatrix <- ordinal::clm(current_formula, data = input,
+#                                  link = "probit", start = c(1/3, 2/3, rep(0, k)),
+#                                  control = list(method = "design",  # try adjusting tolerances to get convergence
+#                                                 lower = c(1/3 - .Machine$double.eps, 2/3 - .Machine$double.eps, rep(-Inf, k)),
+#                                                 upper = c(1/3 + .Machine$double.eps, 2/3 - .Machine$double.eps, rep(+Inf, k))))
+# final_mod_dmatrix$control$method <- "optim"
+# final_model <- clm.fit(final_mod_dmatrix)
+
 # summary(final_model)
 # final formula
-final_form <- formula(final_model)
+final_form <- formula(final_model)  # final_model
 # print(final_form)
 # # Useful info for meta-analysis
 coeff <- coef(final_model) # grab coefficients
