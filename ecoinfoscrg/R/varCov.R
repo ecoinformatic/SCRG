@@ -1,17 +1,81 @@
-# Source getBetas.R script for predictors
-source("R/getBetas.R")
+# # Source getBetas.R script for predictors
+# source("R/getBetas.R")
 
 # Load final models from model selection
-choc_mod_new <- readRDS("data/choc_non_parallel_new_final_model.rds")
-pens_mod_new <- readRDS("data/pens_non_parallel_new_final_model.rds")
-tampa_mod_new <- readRDS("data/tampa_non_parallel_new_final_model.rds")
-IRL_mod_new <- readRDS("data/IRL_non_parallel_new_final_model.rds")
+# choc_mod_new <- readRDS("data/choc_non_parallel_new_final_model.rds")
+# pens_mod_new <- readRDS("data/pens_non_parallel_new_final_model.rds")
+# tampa_mod_new <- readRDS("data/tampa_non_parallel_new_final_model.rds")
+# IRL_mod_new <- readRDS("data/IRL_non_parallel_new_final_model.rds")
 
-# Only using variances for now
-cov_matrix <- list(choc = ctmm::pd.solve(choc_mod_new$Hessian),
-                   pens = ctmm::pd.solve(pens_mod_new$Hessian),
-                   tampa = ctmm::pd.solve(tampa_mod_new$Hessian),
-                   IRL = ctmm::pd.solve(IRL_mod_new$Hessian))
+choc_mod_new <- readRDS("data/choc_fix_ordinal_final_model.rds")
+pens_mod_new <- readRDS("data/pens_fix_ordinal_final_model.rds")
+tampa_mod_new <- readRDS("data/tampa_fix_ordinal_final_model.rds")
+IRL_mod_new <- readRDS("data/IRL_fix_ordinal_final_model.rds")
+
+studies <- list(choc_mod_new, pens_mod_new, tampa_mod_new, IRL_mod_new) # aggregate models from studies
+
+# Retrieve local betas
+# choc_Betas <- readRDS("data/choc_non_parallel_new_average_betas.rds")
+# pens_Betas <- readRDS("data/pens_non_parallel_new_average_betas.rds")
+# tampa_Betas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
+# IRL_Betas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
+
+chocBetas <- readRDS("data/choc_fix_ordinal_betas.rds")
+pensBetas <- readRDS("data/pens_fix_ordinal_betas.rds")
+tampaBetas <- readRDS("data/tampa_fix_ordinal_betas.rds")
+IRLBetas <- readRDS("data/IRL_fix_ordinal_betas.rds")
+
+studies_betas <- list(chocBetas, pensBetas, tampaBetas, IRLBetas)  # aggregate betas from studies
+
+# # Retrieve covariance matrices from each model
+# # Only using variances for now
+# cov_matrix <- list(choc = ctmm::pd.solve(choc_mod_new$Hessian),
+#                    pens = ctmm::pd.solve(pens_mod_new$Hessian),
+#                    tampa = ctmm::pd.solve(tampa_mod_new$Hessian),
+#                    IRL = ctmm::pd.solve(IRL_mod_new$Hessian))
+
+# Function to update thresholds from probit regression (EQUIDISTANT)
+# zetas <- function(model, betas) {
+#
+#   ## CHECK
+#   avg_zeta <- mean(model$zeta)  # average zetas
+#   d_zeta <- diff(model$zeta)  # model$zeta[2]-model$zeta[1]  # difference in zetas
+#   int <- -avg_zeta  # new intercept
+#   # adjust <- (2*qnorm(0.975))/d_zeta  # threshold adjustment
+#   adjust <- (d_zeta/diff(pnorm(model$zeta))) * ((0.975-0.025)/(2*qnorm(0.975)))
+#   betas_new <- betas
+#   betas_new[,1] <- adjust*betas[,1]  # new betas
+#
+#   # Adjust covariance matrix
+#   matrix_initial <- ctmm::pd.solve(model$Hessian)  # retrieve original COV
+#   matrix_new <- (adjust^2)*matrix_initial
+#
+#   return(list(zetas = c(avg_zeta, d_zeta),
+#               intercept = int,
+#               betas_new = betas_new,
+#               cov_matrix = matrix_new))
+#
+# }
+#
+# # Threshold adjustments
+# updated_mods <- list()
+# cov_matrix <- list()  # store all COVs together
+# for (i in 1:length(studies)) {
+#   updated_mods[[i]] <- zetas(studies[[i]], studies_betas[[i]])
+#   cov_matrix[[i]] <- updated_mods[[i]]$cov_matrix
+# }
+
+# Reassign betas for getBetas.R
+# chocBetas <- updated_mods[[1]]$betas_new
+# pensBetas <- updated_mods[[2]]$betas_new
+# tampaBetas <- updated_mods[[3]]$betas_new
+# IRLBetas <- updated_mods[[4]]$betas_new
+
+
+
+# Source getBetas.R script for predictors and to combine betas
+source("R/getBetas.R")
+
 
 for (i in 1:length(cov_matrix)) {
 
@@ -47,15 +111,24 @@ for (i in 1:length(cov_matrix)) {
   # large_value <- 10000
   large_value <- (.Machine$double.eps)^(-1/3)
   diag(cov_matrix[[i]])[missing_values[[i]][diag(TRUE, nrow(cov_matrix[[i]]))]] <- large_value
-  # Set infinite variances to very large value
-  diag(cov_matrix[[i]])[which(is.infinite(diag(cov_matrix[[i]])))] <- large_value
-  # Set very large variances to very large value
-  diag(cov_matrix[[i]])[which(diag(cov_matrix[[i]])>large_value)] <- large_value
+  # # Set infinite variances to very large value
+  # diag(cov_matrix[[i]])[which(is.infinite(diag(cov_matrix[[i]])))] <- large_value
+  # # Set very large variances to very large value
+  # diag(cov_matrix[[i]])[which(diag(cov_matrix[[i]])>large_value)] <- large_value
 
 }
 # View(cov_matrix)
 
 # save(cov_matrix, file = "../output/cov_matrices.rda")
+
+# Source matrix cleaning script
+source("inst/scripts/clean_matrix.R")
+
+# Clean each covariance matrix
+adjusted_cov_matrix <- list()
+for (i in 1:length(cov_matrix)) {
+  adjusted_cov_matrix[[i]] <- clean_matrix(cov_matrix[[i]])
+}
 
 
 # Grab variances from each matrix
@@ -64,13 +137,21 @@ for (i in 1:nrow(VAR)) {
   for (j in 1:ncol(VAR)) {
 
     # Add variances to corresponding predictor and study
-    VAR[i,j] <- diag(cov_matrix[[i]])[which(names(diag(cov_matrix[[i]])) == colnames(VAR)[j])]
+    # VAR[i,j] <- diag(cov_matrix[[i]])[which(names(diag(cov_matrix[[i]])) == colnames(VAR)[j])]
+    VAR[i,j] <- diag(adjusted_cov_matrix[[i]])[which(names(diag(adjusted_cov_matrix[[i]])) == colnames(VAR)[j])]
   }
 }
+
+
 
 # View(VAR)
 
 # save(VAR, file = "../output/variances.rda")
+
+
+
+
+# For Choc, try leaving out one then leaving out the other and averaging the betas and COVs
 
 
 

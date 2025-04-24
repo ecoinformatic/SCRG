@@ -9,19 +9,21 @@ library(dplyr)
 # Updated with Kriging
 # source("inst/scripts/wranglingCleaning_kriging.R")
 # source("inst/scripts/standardize_kriging.R")
+
+# Retrieve cleaned predictor data
 pred <- readRDS("data/predictors_kriged_standardized.rds")
 pred <- as.data.frame(pred)  # convert to dataframe so "geometry" is not selected
 
-chocBetas <- readRDS("data/choc_non_parallel_new_average_betas.rds")
-pensBetas <- readRDS("data/pens_non_parallel_new_average_betas.rds")
-IRLBetas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
-tampaBetas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
+# chocBetas <- readRDS("data/choc_non_parallel_new_average_betas.rds")
+# pensBetas <- readRDS("data/pens_non_parallel_new_average_betas.rds")
+# IRLBetas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
+# tampaBetas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
 
-# Standardize betas (Z-score)
-chocBetas[,1] <- (chocBetas[,1] + mean(chocBetas[,1]))/sd(chocBetas[,1])
-pensBetas[,1] <- (pensBetas[,1] + mean(pensBetas[,1]))/sd(pensBetas[,1])
-tampaBetas[,1] <- (tampaBetas[,1] + mean(tampaBetas[,1]))/sd(tampaBetas[,1])
-IRLBetas[,1] <- (IRLBetas[,1] + mean(IRLBetas[,1]))/sd(IRLBetas[,1])
+# # Standardize betas (Z-score)
+# chocBetas[,1] <- (chocBetas[,1] + mean(chocBetas[,1]))/sd(chocBetas[,1])
+# pensBetas[,1] <- (pensBetas[,1] + mean(pensBetas[,1]))/sd(pensBetas[,1])
+# tampaBetas[,1] <- (tampaBetas[,1] + mean(tampaBetas[,1]))/sd(tampaBetas[,1])
+# IRLBetas[,1] <- (IRLBetas[,1] + mean(IRLBetas[,1]))/sd(IRLBetas[,1])
 
 # Get predictors (excluding study and definitions)
 numeric_pred <- pred %>%
@@ -112,11 +114,11 @@ combined_betas_only <- combined_betas[, !colnames(combined_betas) %in% "study"]
 # EXTRA: SE (for effect size)
 ################################
 
-# Standardize SE (Z-score)
-chocBetas[,2] <- (chocBetas[,2] + mean(chocBetas[,2]))/sd(chocBetas[,2])
-pensBetas[,2] <- (pensBetas[,2] + mean(pensBetas[,2]))/sd(pensBetas[,2])
-tampaBetas[,2] <- (tampaBetas[,2] + mean(tampaBetas[,2]))/sd(tampaBetas[,2])
-IRLBetas[,2] <- (IRLBetas[,2] + mean(IRLBetas[,2]))/sd(IRLBetas[,2])
+# # Standardize SE (Z-score)
+# chocBetas[,2] <- (chocBetas[,2] + mean(chocBetas[,2]))/sd(chocBetas[,2])
+# pensBetas[,2] <- (pensBetas[,2] + mean(pensBetas[,2]))/sd(pensBetas[,2])
+# tampaBetas[,2] <- (tampaBetas[,2] + mean(tampaBetas[,2]))/sd(tampaBetas[,2])
+# IRLBetas[,2] <- (IRLBetas[,2] + mean(IRLBetas[,2]))/sd(IRLBetas[,2])
 
 # Function to convert model out put to dataframe (only keep "Estimate")
 prepare_se_df <- function(matrix, source) {
