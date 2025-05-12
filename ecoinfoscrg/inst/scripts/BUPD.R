@@ -2,15 +2,18 @@
 # INITIALIZE
 ############################################
 library(parallel)
-library(MASS)
+# library(MASS)
+source("R/ordinal.R")
 numCores <- detectCores() - 1
 
 # Initial empty model
 initial_formula <- as.formula(paste(response_var, "~ 1"))
 best_formula <- initial_formula
 
-best_model <- polr(best_formula, data = input, Hess = TRUE, method = "probit")
-best_aic <- AIC(best_model)
+best_model <- ordinal(best_formula, data = input)
+best_aic <- best_model$AIC
+# best_model <- polr(best_formula, data = input, Hess = TRUE, method = "probit")
+# best_aic <- AIC(best_model)
 name_prefix <- gsub(" ", "_", name) # add underscores
 
 ############################################
@@ -19,8 +22,10 @@ name_prefix <- gsub(" ", "_", name) # add underscores
 # Function to fit and evaluate models
 fit_model <- function(formula, data) {
   tryCatch({
-    model <- polr(formula, data = data, Hess = TRUE, method = "probit")
-    aic <- AIC(model)
+    # model <- polr(formula, data = data, Hess = TRUE, method = "probit")
+    # aic <- AIC(model)
+    model <- ordinal(formula, data = data)
+    aic <- model$AIC
     return(list(formula_str = paste(deparse(formula, width.cutoff = 500), collapse = ""),
                 model = model, aic = aic, error = NULL))
   }, error = function(e) {
@@ -71,13 +76,16 @@ for (i in 1:length(predictors)) {
 }
 
 # Final model
-best_model <- polr(best_formula, data = input, Hess = TRUE, method = "probit")
+# best_model <- polr(best_formula, data = input, Hess = TRUE, method = "probit")
+best_model <- ordinal(best_formula, data = input)
+best_aic <- best_model$AIC
 
 ############################################
 # PAIR-DOWN PHASE
 ############################################
 current_formula <- best_formula  # start with best FORMULA from build-up phase
-current_aic <- AIC(best_model)
+# current_aic <- AIC(best_model)
+current_aic <- best_model$AIC
 
 # >>>>> WORKS TO THIS POINT (~66 preds, ~ 12 hours) <<<<<
 # 08/09/2024: Seems to be working for pairdown; outputting formulas as it tests. Waiting for it to finish. If need to, can save outut from buildup for later testing.
@@ -118,7 +126,8 @@ repeat {
 }
 
 # Final pairdown model
-final_model <- polr(current_formula, data = input, Hess = TRUE, method = "probit")
+# final_model <- polr(current_formula, data = input, Hess = TRUE, method = "probit")
+final_model <- ordinal(current_formula, data = input)
 final_form <- formula(final_model)
 
 # Useful info for meta-analysis
