@@ -49,24 +49,33 @@ pred_IRL <- pred %>% filter(study == "IRL")
 
 ##### CHOSE STUDY HERE #####
 # combine response and pred
-data <- cbind(resp_tampa, pred_tampa) # choc example
+data <- cbind(resp_choc, pred_choc) # choc example
 
 # Specify a short name of the model
-name <- "tampa_non_parallel_new"
+name <- "choc_ordinal_bounded"
 ############################
 
 # Define the response variable
 response_var <- "Response"
 
 study <- data.frame(study = state$study)
-input <- cbind(resp_tampa, pred_tampa)
+input <- cbind(resp_choc, pred_choc)
 input$SMMv5Def <- NULL
 input$study <- as.factor(input$study)
 
 # Run build-up/pair-down R scripts
 start_time <- Sys.time()
-source("inst/scripts/BUPD_nonparallel.R")
+# source("inst/scripts/BUPD_nonparallel.R")
+source("inst/scripts/BUPD.R")
 end_time <- Sys.time()
+
+
+## ERROR for tampa/IRL ##
+# Warning in ctmm:::cov.loglike(DERIV$hess, DERIV$grad) :
+#   MLE is near a boundary or optimizer failed.
+# No further improvement, final model selected.
+# Warning in ctmm:::cov.loglike(DERIV$hess, DERIV$grad) :
+#   MLE is near a boundary or optimizer failed.
 
 
 #######################

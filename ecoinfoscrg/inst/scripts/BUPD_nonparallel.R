@@ -250,10 +250,12 @@ final_model <- ordinal(current_formula, data = input)
 
 # summary(final_model)
 # final formula
-final_form <- formula(final_model)  # final_model
+# final_form <- formula(final_model)  # final_model
+final_form <- current_formula
 # print(final_form)
 # # Useful info for meta-analysis
-coeff <- coef(final_model) # grab coefficients
+# coeff <- coef(final_model) # grab coefficients
+coeff <- final_model$est
 # standard_err <- sqrt(diag(vcov(final_model))) # Calculate SE (method OK?)
 # confidence_intervals <- confint(final_model, level = 0.95) # Calculate CI
 odds_ratios <- exp(coeff) # Calculate OR

@@ -128,10 +128,12 @@ repeat {
 # Final pairdown model
 # final_model <- polr(current_formula, data = input, Hess = TRUE, method = "probit")
 final_model <- ordinal(current_formula, data = input)
-final_form <- formula(final_model)
+# final_form <- formula(final_model)
+final_form <- current_formula
 
 # Useful info for meta-analysis
-coeff <- coef(final_model)
+# coeff <- coef(final_model)
+coeff <- final_model$est
 odds_ratios <- exp(coeff)
 
 # `assign` to new variables based on name prefix chosen
