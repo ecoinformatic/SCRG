@@ -49,19 +49,19 @@ Note that the working directory for this workflow is the "SCRG/ecoinfoscrg" fold
 ## Import shape file data
 # Choctawatchee Bay data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
 # choc <- st_read("./Data/choctawatchee_bay/choctawatchee_bay_lssm_POINTS_0.001deg.shp")
-choc <- st_read("~/R/SCRG-additions/Data/choctawatchee_bay/choctawatchee_bay_lssm_POINTS_0.001deg.shp")
+choc <- st_read("~/R/SCRG/Data/choctawatchee_bay/choctawatchee_bay_lssm_POINTS_0.001deg.shp")
 
 # Pensacola Bay data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
 # pens <- st_read("./Data/santa_rosa_bay/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp")
-pens <- st_read("~/R/SCRG-additions/Data/santa_rosa_bay/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp")
+pens <- st_read("~/R/SCRG/Data/santa_rosa_bay/Santa_Rosa_Bay_Living_Shoreline_POINTS_0.001deg.shp")
 
 # Tampa Bay data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
 # tampa <- st_read("./Data/tampa_bay/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp")
-tampa <- st_read("~/R/SCRG-additions/Data/tampa_bay/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp")
+tampa <- st_read("~/R/SCRG/Data/tampa_bay/Tampa_Bay_Living_Shoreline_Suitability_Model_Results_POINTS_0.001deg.shp")
 
 # Indian River Lagoon data (transformed 0.001deg.shp from WGS 84 to 6346 17N )
 # IRL <- st_read("./Data/indian_river_lagoon/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp")
-IRL <- st_read("~/R/SCRG-additions/Data/indian_river_lagoon/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp")
+IRL <- st_read("~/R/SCRG/Data/indian_river_lagoon/UCF_livingshorelinemodels_MosquitoNorthIRL_111m.shp")
 
 ## Note that the response variable for IRL does not follow the same evaluation
 ## convention as the other LSSMs
@@ -171,7 +171,7 @@ numeric_pred <- pred %>%
   select_if(is.numeric)
 factor_pred <- pred %>%
   select_if(is.factor)
-predictors <- colnames(cbind(factor_pred, numeric_pred))
+predictors_full <- colnames(cbind(factor_pred, numeric_pred))
 
 ## Choctawatchee
 # combine response and pred

@@ -77,6 +77,9 @@ end_time <- Sys.time()
 # Warning in ctmm:::cov.loglike(DERIV$hess, DERIV$grad) :
 #   MLE is near a boundary or optimizer failed.
 
+# Warning in Q[Y] - LE :
+#   longer object length is not a multiple of shorter object length
+
 
 #######################
 # RETRIEVE BETAS
