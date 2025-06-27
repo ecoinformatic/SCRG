@@ -6,6 +6,8 @@ library(parallel)
 source("R/ordinal.R")
 numCores <- detectCores() - 1
 
+predictors <- predictors_full  # save predictors
+
 # Initial empty model
 initial_formula <- as.formula(paste(response_var, "~ 1"))
 best_formula <- initial_formula
@@ -32,6 +34,15 @@ fit_model <- function(formula, data) {
     return(list(formula_str = NULL, model = NULL, aic = Inf, error = e$message))
   })
 }
+
+# Remove predictors with zero variance
+ZV <- c()
+for (var in predictors) {
+  if (length(unique(input[[var]])) == 1 && is.na(unique(input[[var]]))) {
+    ZV[var] <- var
+  }
+}
+predictors <- setdiff(predictors, ZV)
 
 # Build-up phase
 for (i in 1:length(predictors)) {
@@ -95,43 +106,49 @@ repeat {
 
     # Use mclapply to parallelize the pair-down model fitting with forked processes
     results <- mclapply(predictors_in_model, function(predictor) {
+      if(length(predictors_in_model <= 1)) {
+        pairdown_formula <- as.formula(paste(response_var, "~", 1))
+      } else {
         pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+")))
-        if (length(all.vars(pairdown_formula)[-1]) == 0) {
-            return(NULL)
-        }
+      }
+      if (length(all.vars(pairdown_formula)[-1]) == 0) {
+        return(NULL)
+      }
 
-        fit <- fit_model(pairdown_formula, input)
-        formula_str <- paste(deparse(pairdown_formula, width.cutoff = 500), collapse = "")
-        list(formula_str = formula_str, aic = fit$aic)
+      fit <- fit_model(pairdown_formula, input)
+      formula_str <- paste(deparse(pairdown_formula, width.cutoff = 500), collapse = "")
+      list(formula_str = formula_str, aic = fit$aic)
     }, mc.cores = numCores)
 
     # Filter out results with errors
     results <- Filter(function(x) !is.null(x$formula_str), results)
 
     if (length(results) > 0) {
-        best_pairdown_aic <- min(sapply(results, function(x) x$aic))
-        if (best_pairdown_aic < current_aic) {
-            best_pairdown_formula <- results[[which.min(sapply(results, function(x) x$aic))]]$formula_str
-            current_formula <- as.formula(best_pairdown_formula)
-            current_aic <- best_pairdown_aic
-            cat("New best pairdown model:", best_pairdown_formula, "AIC:", best_pairdown_aic, "\n")
-        } else {
-            cat("No further improvement, final model selected.\n")
-            break
-        }
+      best_pairdown_aic <- min(sapply(results, function(x) x$aic))
+      if (best_pairdown_aic < current_aic) {
+          best_pairdown_formula <- results[[which.min(sapply(results, function(x) x$aic))]]$formula_str
+          current_formula <- as.formula(best_pairdown_formula)
+          current_aic <- best_pairdown_aic
+          cat("New best pairdown model:", best_pairdown_formula, "AIC:", best_pairdown_aic, "\n")
+      } else {
+          cat("No further improvement, final model selected.\n")
+        break
+      }
     } else {
         cat("No improvement, stopping pair-down phase.\n")
-        break
+      break
     }
 }
 
 # Final pairdown model
 # final_model <- polr(current_formula, data = input, Hess = TRUE, method = "probit")
 final_model <- ordinal(current_formula, data = input)
-final_form <- formula(final_model)
+# final_form <- formula(final_model)
+final_form <- current_formula
 
 # Useful info for meta-analysis
-coeff <- coef(final_model)
+# coeff <- coef(final_model)
+coeff <- final_model$est
 odds_ratios <- exp(coeff)
 
 # `assign` to new variables based on name prefix chosen

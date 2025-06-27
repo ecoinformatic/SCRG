@@ -6,9 +6,10 @@ ordinal <- function(formula,data)
   D <- stats::model.matrix(formula,data)
 
   # response variable # assumed to be 1:K
-  Y <- stats::model.frame(formula,data)
+  Y <- stats::model.frame(formula,data,na.action = "na.pass")  # na.pass ensures that Y contains data
   Y <- stats::model.extract(Y,"response")
-  if(min(Y)!=1) { stop("Response variable needs to be an integer sequence 1:K") }
+  # if(min(Y)!=1) { stop("Response variable needs to be an integer sequence 1:K") }
+  if(min(Y)<1) { stop("Response variable needs to be an integer sequence 1:K") }
 
   # quantile scale
   K <- max(Y)

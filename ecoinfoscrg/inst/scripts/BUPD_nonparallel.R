@@ -9,6 +9,8 @@
 # library(ordbetareg)
 source("R/ordinal.R")
 
+predictors <- predictors_full  # save predictors
+
 # Initial empty model
 # Note that `best_formula` starts with `initial_formula` as baseline
 # initial_formula <- as.formula(paste(response_var, "~ 1 + (1|study)"))
@@ -88,6 +90,15 @@ fit_model <- function(formula, data) {
     return(list(model = NULL, aic = Inf, error = e$message))
   })
 }
+
+# Remove predictors with zero variance
+ZV <- c()
+for (var in predictors) {
+  if (length(unique(input[[var]])) == 1 && is.na(unique(input[[var]]))) {
+    ZV[var] <- var
+  }
+}
+predictors <- setdiff(predictors, ZV)
 
 # Similar to Chris' only with a multinomial logistic regression (which can be switched out)
 for (i in 1:length(predictors)) {
@@ -195,7 +206,12 @@ repeat {
   # current_aic <- (2*length(current_model$coefficients)) + (2*current_model$logLik)
 
   for (predictor in predictors_in_model) { # Loop through each predictors to test their removal
-    pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+"))) # New formula without current predictor
+    if(length(predictors_in_model <= 1)) {
+      pairdown_formula <- as.formula(paste(response_var, "~", 1))
+    } else {
+      pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+")))
+    }
+    # pairdown_formula <- as.formula(paste(response_var, "~", paste(setdiff(predictors_in_model, predictor), collapse = "+"))) # New formula without current predictor
     if (length(all.vars(pairdown_formula)[-1]) == 0) { # check if model is empty (no predictors)
       next  # skip iteration if no predictors are left
     }
@@ -250,10 +266,12 @@ final_model <- ordinal(current_formula, data = input)
 
 # summary(final_model)
 # final formula
-final_form <- formula(final_model)  # final_model
+# final_form <- formula(final_model)  # final_model
+final_form <- current_formula
 # print(final_form)
 # # Useful info for meta-analysis
-coeff <- coef(final_model) # grab coefficients
+# coeff <- coef(final_model) # grab coefficients
+coeff <- final_model$est
 # standard_err <- sqrt(diag(vcov(final_model))) # Calculate SE (method OK?)
 # confidence_intervals <- confint(final_model, level = 0.95) # Calculate CI
 odds_ratios <- exp(coeff) # Calculate OR
