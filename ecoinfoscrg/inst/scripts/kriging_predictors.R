@@ -183,54 +183,54 @@ pens <- pred[pred$study == "pens",]
 tampa <- pred[pred$study == "tampa",]
 
 
-## CATEGORICAL VARS -----
+## CATEGORICAL VARS
 
-# Function for interpolating categorical variables
-site_cat <- function(site, var, duplicates.rm = TRUE) {
-
-  # Select variable
-  cat.var <- as.data.frame(dplyr::select(site, starts_with(var)))  # automatically selects geometry
-
-  # Convert to spatial object
-  cat.var <- sp::SpatialPointsDataFrame(coords = sf::st_coordinates(sf::st_as_sf(cat.var)),
-                                        data = cat.var,
-                                        proj4string = crs)
-
-  # Locations to krige for
-  name <- deparse(substitute(site))
-  newdat <- miss_data %>%
-    filter(study == name) %>%
-    dplyr::select(starts_with(var))
-  newdat <- newdat[newdat[[1]] == 1,]
-
-  # Empty list
-  krige <- list()
-
-  # Krige for categorical variable (if possible)
-  for (i in 1:(ncol(cat.var)-1)) {
-    print(paste(i, "out of", ncol(cat.var)-1))  # to track progress
-    if (all(cat.var[[i]] == 1)) {
-      krige[i] <- list(paste("All identical and equal to 1"),
-                       var1.pred = 1)
-    } else if (all(cat.var[[i]] == 0)) {
-      krige[i] <- list(paste("All identical and equal to 0"),
-                       var1.pred = 0)
-    } else {
-      # Kriging formula
-      formula <- as.formula(paste(names(cat.var)[i], " ~ 1"))
-      krige[i] <- automap::autoKrige(formula = formula, cat.var,
-                                     new_data = sp::SpatialPointsDataFrame(sf::st_coordinates(sf::st_as_sf(newdat)),
-                                                                           data = as.data.frame(newdat),
-                                                                           proj4string = crs),
-                                     remove_duplicates = duplicates.rm, verbose = TRUE)
-    }
-  }
-
-  # Rename list elements to match categories
-  names(krige) <- names(cat.var)[-ncol(cat.var)]
-
-  return(krige)  # kriged output
-}
+# # Function for interpolating categorical variables
+# site_cat <- function(site, var, duplicates.rm = TRUE) {
+#
+#   # Select variable
+#   cat.var <- as.data.frame(dplyr::select(site, starts_with(var)))  # automatically selects geometry
+#
+#   # Convert to spatial object
+#   cat.var <- sp::SpatialPointsDataFrame(coords = sf::st_coordinates(sf::st_as_sf(cat.var)),
+#                                         data = cat.var,
+#                                         proj4string = crs)
+#
+#   # Locations to krige for
+#   name <- deparse(substitute(site))
+#   newdat <- miss_data %>%
+#     filter(study == name) %>%
+#     dplyr::select(starts_with(var))
+#   newdat <- newdat[newdat[[1]] == 1,]
+#
+#   # Empty list
+#   krige <- list()
+#
+#   # Krige for categorical variable (if possible)
+#   for (i in 1:(ncol(cat.var)-1)) {
+#     print(paste(i, "out of", ncol(cat.var)-1))  # to track progress
+#     if (all(cat.var[[i]] == 1)) {
+#       krige[i] <- list(paste("All identical and equal to 1"),
+#                        var1.pred = 1)
+#     } else if (all(cat.var[[i]] == 0)) {
+#       krige[i] <- list(paste("All identical and equal to 0"),
+#                        var1.pred = 0)
+#     } else {
+#       # Kriging formula
+#       formula <- as.formula(paste(names(cat.var)[i], " ~ 1"))
+#       krige[i] <- automap::autoKrige(formula = formula, cat.var,
+#                                      new_data = sp::SpatialPointsDataFrame(sf::st_coordinates(sf::st_as_sf(newdat)),
+#                                                                            data = as.data.frame(newdat),
+#                                                                            proj4string = crs),
+#                                      remove_duplicates = duplicates.rm, verbose = TRUE)
+#     }
+#   }
+#
+#   # Rename list elements to match categories
+#   names(krige) <- names(cat.var)[-ncol(cat.var)]
+#
+#   return(krige)  # kriged output
+# }
 
 # # Example for choc PermStruc variable
 # choc_Perm_krige <- site_cat(choc, "PermStruc", duplicates.rm = FALSE)

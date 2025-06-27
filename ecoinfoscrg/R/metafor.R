@@ -14,14 +14,14 @@ source("R/varCov.R")
 
 ###############
 # Define predictor columns
-predictor_columns <- colnames(combined_betas_only)
+# predictor_columns <- colnames(combined_betas_only)
 
 # Create the formula string dynamically
-formula_string <- paste("~", paste(predictor_columns, collapse = " + "))
-formula <- as.formula(formula_string)
+# formula_string <- paste("~", paste(predictor_columns, collapse = " + "))
+# formula <- as.formula(formula_string)
 
 # Prepare the beta estimates
-betas <- combined_betas_only
+# betas <- combined_betas_only
 
 
 ###########
@@ -140,13 +140,13 @@ betas <- combined_betas_only
 betas_vector <- as.vector(t(combined_betas_only))
 
 # Get study vector corresponding to each beta (required for study random effect)
-study_labels <- c("choc", "pens", "tampa", "IRL") # will need to change labels as more data is available
-study_vector <- rep(study_labels, each = ncol(combined_betas_only))
+# study_labels <- c("choc", "pens", "tampa", "IRL") # will need to change labels as more data is available
+study_vector <- rep(studies, each = ncol(combined_betas_only))
 
 # specify input data
 beta = betas_vector
 study = factor(study_vector)
-predictor = rep(colnames(combined_betas_only), times = length(study_labels))
+predictor = rep(colnames(combined_betas_only), times = length(studies))
 # variance <- as.vector(t(adjusted_VAR))
 variance <- as.vector(t(VAR))
 # variance <- adjusted_cov_matrix
@@ -183,7 +183,7 @@ meta_regression <- function(
 unscaled.meta <- meta_regression()
 
 # saveRDS(unscaled.meta, file = "../output/unscaled_meta.rds")  # file.path("output", "unscaled_meta.rds"))
-saveRDS(unscaled.meta, file = "../output/unscaled_meta2.rds")  # file.path("output", "unscaled_meta.rds"))
+saveRDS(unscaled.meta, file = "../output/unscaled_meta3.rds")  # file.path("output", "unscaled_meta.rds"))
 # unscaled.meta <- readRDS("../output/unscaled_meta.rds")
 
 

@@ -7,12 +7,18 @@
 # tampa_mod_new <- readRDS("data/tampa_non_parallel_new_final_model.rds")
 # IRL_mod_new <- readRDS("data/IRL_non_parallel_new_final_model.rds")
 
-choc_mod_new <- readRDS("data/choc_fix_ordinal_final_model.rds")
-pens_mod_new <- readRDS("data/pens_fix_ordinal_final_model.rds")
-tampa_mod_new <- readRDS("data/tampa_fix_ordinal_final_model.rds")
-IRL_mod_new <- readRDS("data/IRL_fix_ordinal_final_model.rds")
+# choc_mod_new <- readRDS("data/choc_fix_ordinal_final_model.rds")
+# pens_mod_new <- readRDS("data/pens_fix_ordinal_final_model.rds")
+# tampa_mod_new <- readRDS("data/tampa_fix_ordinal_final_model.rds")
+# IRL_mod_new <- readRDS("data/IRL_fix_ordinal_final_model.rds")
 
-studies <- list(choc_mod_new, pens_mod_new, tampa_mod_new, IRL_mod_new) # aggregate models from studies
+# Check if `Betas` exists
+if(!exists("mods")) {
+  stop("No models found. Please assign the selected model from each study to a list named `mods`.")
+} else { message(paste("Identified selected models from", length(mods), "studies.")) }
+
+# mods <- list(choc_mod_new, pens_mod_new, tampa_mod_new, IRL_mod_new) # aggregate models from studies
+
 
 # Retrieve local betas
 # choc_Betas <- readRDS("data/choc_non_parallel_new_average_betas.rds")
@@ -20,14 +26,25 @@ studies <- list(choc_mod_new, pens_mod_new, tampa_mod_new, IRL_mod_new) # aggreg
 # tampa_Betas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
 # IRL_Betas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
 
-chocBetas <- readRDS("data/choc_fix_ordinal_betas.rds")
-pensBetas <- readRDS("data/pens_fix_ordinal_betas.rds")
-tampaBetas <- readRDS("data/tampa_fix_ordinal_betas.rds")
-IRLBetas <- readRDS("data/IRL_fix_ordinal_betas.rds")
+# chocBetas <- readRDS("data/choc_fix_ordinal_betas.rds")
+# pensBetas <- readRDS("data/pens_fix_ordinal_betas.rds")
+# tampaBetas <- readRDS("data/tampa_fix_ordinal_betas.rds")
+# IRLBetas <- readRDS("data/IRL_fix_ordinal_betas.rds")
 
-studies_betas <- list(chocBetas, pensBetas, tampaBetas, IRLBetas)  # aggregate betas from studies
+# Check if `Betas` exists
+if(!exists("Betas")) {
+  stop("No betas found. Please assign beta coefficient estimates from selected models to a list named `Betas`.")
+} else { message(paste("Identified beta coefficient estimates from", length(Betas), "studies.")) }
 
-# # Retrieve covariance matrices from each model
+# studies_betas <- list(chocBetas, pensBetas, tampaBetas, IRLBetas)  # aggregate betas from studies
+
+# Retrieve covariance matrices from each model
+cov_matrix <- list(mods[[1]]$COV,
+                   mods[[2]]$COV,
+                   mods[[3]]$COV,
+                   mods[[4]]$COV)
+
+
 # # Only using variances for now
 # cov_matrix <- list(choc = ctmm::pd.solve(choc_mod_new$Hessian),
 #                    pens = ctmm::pd.solve(pens_mod_new$Hessian),
@@ -76,6 +93,8 @@ studies_betas <- list(chocBetas, pensBetas, tampaBetas, IRLBetas)  # aggregate b
 # Source getBetas.R script for predictors and to combine betas
 source("R/getBetas.R")
 
+# print("done getBetas.R")
+
 
 for (i in 1:length(cov_matrix)) {
 
@@ -83,8 +102,8 @@ for (i in 1:length(cov_matrix)) {
   # cov_matrix[[i]] <- (cov_matrix[[i]] + t(cov_matrix[[i]]))/2
 
   # Remove intercepts
-  cov_matrix[[i]] <- cov_matrix[[i]][1:(dim(cov_matrix[[i]])[[1]]-2),
-                                     1:(dim(cov_matrix[[i]])[[2]]-2)]
+  cov_matrix[[i]] <- cov_matrix[[i]][2:(dim(cov_matrix[[i]])[[1]]),
+                                     2:(dim(cov_matrix[[i]])[[2]])]
 }
 
 # Find where there's missing values
