@@ -1,3 +1,4 @@
+#' @noRd
 # Ordinal probit regression
 ordinal <- function(formula,data)
 {

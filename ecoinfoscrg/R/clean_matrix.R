@@ -1,3 +1,5 @@
+#' @noRd
+# VAR-COV matrix cleaning
 clean_matrix <- function(COV,precision=1/3)
 {
  MIN <- .Machine$double.eps^precision

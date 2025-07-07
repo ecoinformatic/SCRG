@@ -2,7 +2,7 @@
 \alias{wranglingCleaning}
 \title{Clean shapefile (.shp) data for Florida Living Shoreline meta-analysis model}
 \description{
-Automates the process of cleaning and combining data sets to be used in the Florida Living Shoreline suitability model. The output is a list that includes the combined response variables and study names, the corresponding table of predictor variables, and vectors of the names of all numeric variables, categorical variables, and binary (indicator) variables. The cleaned data is to be subsequently processed using the \code{standardize} function. See \code{\link[ecoinfoscrg]{standardize}} for more details and \code{vignette(package = "ecoinfoscrg")} for examples of usage.
+Automates the process of cleaning and combining data sets to be used in the Florida Living Shoreline suitability model. The output is a list that includes the combined response variables and study names, the corresponding table of predictor variables, and vectors of the names of all numeric variables, categorical variables, and binary (indicator) variables. The cleaned data is to be subsequently processed using the \code{standardize} function. See \code{\link{standardize}} for more details and \code{vignette(package = "ecoinfoscrg")} for examples of usage.
 }
 \usage{
 wranglingCleaning(data, response)
@@ -37,7 +37,7 @@ Returns a list with:
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link[ecoinfoscrg]{ecoinfoscrg-package}}, \code{\link[ecoinfoscrg]{standardize}}, and vignettes.
+\code{\link{ecoinfoscrg-package}}, \code{\link{standardize}}, and vignettes.
 }
 %%\examples{
 %%##---- Should be DIRECTLY executable !! ----
