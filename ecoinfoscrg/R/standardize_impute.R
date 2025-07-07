@@ -3,7 +3,7 @@
 ## Cleaning and pruning data ----
 
 # Initial data cleaning and combining
-
+#' @export
 wranglingCleaning <- function(data, response) {
 
   # `data` should be a named list of shape (shp) files, 1 file per study
@@ -11,7 +11,7 @@ wranglingCleaning <- function(data, response) {
 
   # For planar data
   sf::sf_use_s2(FALSE)
-  library(dplyr, verbose = FALSE)
+  # library(dplyr, verbose = FALSE)
 
   studies <- list()  # empty list to store shp files
   for (i in 1:length(data)) {
@@ -32,17 +32,17 @@ wranglingCleaning <- function(data, response) {
     # Rename columns that should have consistent names
     ## Exposure
     if ("MxQExpCode" %in% colnames(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], Exposure = MxQExpCode)
+      studies[[i]] <- dplyr::rename(studies[[i]], Exposure = "MxQExpCode")
     } else if ("exposure" %in% colnames(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], Exposure = exposure)
+      studies[[i]] <- dplyr::rename(studies[[i]], Exposure = "exposure")
     }
     # WideBeach
     if ("widebeach" %in% colnames(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], WideBeach = widebeach)
+      studies[[i]] <- dplyr::rename(studies[[i]], WideBeach = "widebeach")
     }
     # Beach
     if ("beach" %in% names(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], Beach = beach)
+      studies[[i]] <- dplyr::rename(studies[[i]], Beach = "beach")
     }
 
     # Rename response column
@@ -50,7 +50,7 @@ wranglingCleaning <- function(data, response) {
 
     # Convert LSSM evaluation to levels 1-3
     studies[[i]] <- studies[[i]] %>%
-      mutate(Response = as.numeric(case_when(
+      dplyr::mutate(Response = as.numeric(dplyr::case_when(
         Response %in% c("Maintain Beach or Offshore Breakwater with Beach Nourishment",
                         "Non-Structural Living Shoreline",
                         "Plant Marsh with Sill", "Existing Marsh Sill", "Existing Breakwater",
@@ -87,7 +87,7 @@ wranglingCleaning <- function(data, response) {
   # Combine Data
   state <- dplyr::bind_rows(studies)
   pred <- state %>%
-    select(-"Response") # Remove response variables
+    dplyr::select(-"Response") # Remove response variables
 
   # List numerical vars
   numerical_vars <- c("angle", "IT_Width", "Hab_W1",
@@ -117,7 +117,7 @@ wranglingCleaning <- function(data, response) {
 
   # Convert numeric variables to numeric if not already
   pred <- pred %>%
-    mutate(across(all_of(numerical_vars), as.numeric))
+    dplyr::mutate(dplyr::across(dplyr::all_of(numerical_vars), as.numeric))
 
   # Spelling and capitalization corrections (words must be chosen manually)
   corrections <- data.frame(
@@ -133,7 +133,7 @@ wranglingCleaning <- function(data, response) {
 
   # Fix misspelled words
   pred <- pred %>%
-    mutate(across(where(is.character), ~{
+    dplyr::mutate(dplyr::across(dplyr::where(is.character), ~{
       column <- .
       for (i in 1:nrow(corrections)) {
         # Use regex to match case-insensitively
@@ -167,17 +167,18 @@ wranglingCleaning <- function(data, response) {
 
 
 # Standardizing and pre-processing variables
-
+#' @export
 standardize <- function(data,
                         site.method = c("krige", "medianImpute", "meanImpute"),
                         state.method = c("meanImpute", "medianImpute"),  # kriging only available within study sites
                         duplicates = TRUE) {  # `duplicates` argument only used for kriging
 
   # Load dplyr quietly
-  library(dplyr, verbose = FALSE)
+  # library(dplyr, verbose = FALSE)
   sf::sf_use_s2(FALSE)  # for planar data
 
-  if (class(data) != "list") {
+  # if (class(data) != "list") {
+  if (!is.list(data)) {
     stop("'data' argument is not formatted properly as a list.
     Please use the same format as the output from 'wranglingCleaning()':
     list with 'state', 'predictors', 'numerical_vars', 'categorical_vars', 'binary_vars'.")
@@ -190,9 +191,9 @@ standardize <- function(data,
 
   # Convert variables to proper format
   pred <- pred %>%
-    mutate(across(all_of(numerical_vars), as.numeric)) %>%  # numeric if not already
-    mutate(across(all_of(binary_vars), as.numeric)) %>%  # numeric if not already
-    mutate(across(all_of(categorical_vars), as.character))  # character if not already
+    dplyr::mutate(dplyr::across(dplyr::all_of(numerical_vars), as.numeric)) %>%  # numeric if not already
+    dplyr::mutate(dplyr::across(dplyr::all_of(binary_vars), as.numeric)) %>%  # numeric if not already
+    dplyr::mutate(dplyr::across(dplyr::all_of(categorical_vars), as.character))  # character if not already
 
 
   ## Dummy encoding
@@ -232,36 +233,36 @@ standardize <- function(data,
 
     dummy[which(is.na(pred[[var]])), 1] <- 1  # find NAs
     dummy <- dummy %>%  # factor all columns
-      mutate(across(all_of(colnames(dummy)), as.factor))
+      dplyr::mutate(dplyr::across(dplyr::all_of(colnames(dummy)), as.factor))
     pred <- cbind(pred, dummy)  # add to predictors
   }
 
   pred <- pred %>%
-    mutate(across(all_of(categorical_vars), as.factor)) # convert them to factor if not already
+    dplyr::mutate(dplyr::across(dplyr::all_of(categorical_vars), as.factor)) # convert them to factor if not already
 
   # Remaining variables to convert to dummy vars
   categorical_vars2 <- setdiff(categorical_vars, dummy_vars)
 
   # Replace NA with "Missing" for dummy vars
   pred <- pred %>%
-    mutate(across(all_of(categorical_vars2), ~ factor(ifelse(is.na(.), "Missing", .),
+    dplyr::mutate(dplyr::across(dplyr::all_of(categorical_vars2), ~ factor(ifelse(is.na(.), "Missing", .),
                                                       levels = unique(c(.,"Missing")))))
 
   # # Drop geometry for dummy encoding
   geom <- pred$geometry  # save geometry separately
-  pred <- st_drop_geometry(pred)
+  pred <- sf::st_drop_geometry(pred)
 
   # Make dummy variables for all
   for (var in categorical_vars2) {
-    dummies <- model.matrix(~ . - 1, data = pred[var])  # suggested to avoid intercept
+    dummies <- stats::model.matrix(~ . - 1, data = pred[var])  # suggested to avoid intercept
     colnames(dummies) <- paste(var, levels(pred[[var]]), sep = "_")
     pred <- cbind(pred, as.data.frame(dummies))  # merge with original predictors
   }
 
   # Save columns with "Missing"
   miss_data <- pred %>%
-    dplyr::select(c(contains("Missing"), study)) %>%
-    mutate(across(all_of(contains("Missing")), as.factor)) #%>%
+    dplyr::select(c(dplyr::contains("Missing"), "study")) %>%
+    dplyr::mutate(dplyr::across(dplyr::all_of(dplyr::contains("Missing")), as.factor)) #%>%
     # mutate(geometry = geom)
   # miss_data <- st_as_sf(miss_data)  # convert to spatial object
 
@@ -273,9 +274,9 @@ standardize <- function(data,
 
   # Remove OG categorical columns
   pred <- pred %>%
-    dplyr::select(-all_of(categorical_vars)) %>%
-    dplyr::select(-contains(c("Length", "Lgth"))) %>%  # remove "Length" columns
-    dplyr::select(-contains("Missing"))  # remove columns with "Missing"
+    dplyr::select(-dplyr::all_of(categorical_vars)) %>%
+    dplyr::select(-dplyr::contains(c("Length", "Lgth"))) %>%  # remove "Length" columns
+    dplyr::select(-dplyr::contains("Missing"))  # remove columns with "Missing"
 
   # Remove spatial data artifacts
   pred <- pred %>%
@@ -313,8 +314,8 @@ standardize <- function(data,
   }
 
   # Reset geometry for predictors
-  st_geometry(pred) <- geom
-  pred <- st_as_sf(pred)
+  sf::st_geometry(pred) <- geom
+  pred <- sf::st_as_sf(pred)
 
 
   ### Site-wide Imputation
@@ -346,13 +347,13 @@ standardize <- function(data,
         message(paste0("Predictor ", which(site.krige[[i]] == var), "/", length(site.krige[[i]])))
 
         # Check if binary (would need additional post-processing)
-        if (length(unique(na.omit(site.krige[var]))) <= 2 && (0 %in% site.krige[var] | 1 %in% site.krige[var])) {
+        if (length(unique(stats::na.omit(site.krige[var]))) <= 2 && (0 %in% site.krige[var] | 1 %in% site.krige[var])) {
           BINARY <- "YES"
         } else { BINARY <- "NO" }
 
         site.full <- pred[pred$study == i,]
         krige.var <- try(krigePredictors(site = pred[pred$study == i,], var = var,
-                                         formula = as.formula(paste0(var, " ~ 1")),
+                                         formula = stats::as.formula(paste0(var, " ~ 1")),
                                          duplicates = duplicates))
 
         if(!inherits(krige.var,'try-error')) {
@@ -454,7 +455,7 @@ standardize <- function(data,
 
     # Replace remaining NAs in numeric variables with state-wide mean
     pred <- pred %>%
-      mutate(across(all_of(numerical_vars), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+      dplyr::mutate(dplyr::across(dplyr::all_of(numerical_vars), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
 
     ## Median Imputation
 
@@ -464,7 +465,7 @@ standardize <- function(data,
 
     # Replace remaining NAs in numeric variables with state-wide median
     pred <- pred %>%
-      mutate(across(all_of(numerical_vars), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+      dplyr::mutate(dplyr::across(dplyr::all_of(numerical_vars), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
   }
 
 
@@ -485,7 +486,7 @@ standardize <- function(data,
 
   # Save standardization MEAN and SD
   pred_num <- pred %>%
-    select(all_of(numerical_vars))  # store numeric variables
+    dplyr::select(dplyr::all_of(numerical_vars))  # store numeric variables
   # MEAN <<- colMeans(pred_num, na.rm = TRUE)
   # # assign("standardization_MEANs", value = MEAN)
   #
@@ -495,8 +496,8 @@ standardize <- function(data,
   # # assign("standardization_SD", value = SD)
 
   # Load mean and sd to use for standardization
-  load("R/standardization_mean.rda")
-  load("R/standardization_sd.rda")
+  # load("R/standardization_mean.rda")
+  # load("R/standardization_sd.rda")
 
   # Standardize numeric predictors
   # pred <- pred %>%
@@ -506,7 +507,7 @@ standardize <- function(data,
     pred_num[,i] <- (pred_num[,i] - MEAN[i])/SD[i]
   }
   pred <- pred %>%
-    select(-all_of(numerical_vars))  # remove OG numeric vars
+    dplyr::select(-dplyr::all_of(numerical_vars))  # remove OG numeric vars
   pred <- cbind(pred, pred_num)  # add standardized numeric vars
   ## Must use same mean and sd to standardize (transform) any new data
 
@@ -527,7 +528,7 @@ krigePredictors <- function(site, var, formula, duplicates = TRUE) {
   crs <- sp::CRS("EPSG:6346")  # retrieve coordinate reference system
 
   # Select variable to krige for
-  num.var <- as.data.frame(dplyr::select(site, c(var, geometry)))  # automatically selects geometry
+  num.var <- as.data.frame(dplyr::select(site, c(var, "geometry")))  # automatically selects geometry
   newdat <- num.var[is.na(num.var[var]),]  # store rows where data is missing
   num.var <- num.var[!is.na(num.var[var]),]  # remove rows missing data
 
@@ -541,7 +542,7 @@ krigePredictors <- function(site, var, formula, duplicates = TRUE) {
   # variogram
 
   # Krige for numerical/binary variable
-  krige <- automap::autoKrige(as.formula(formula), num.var,
+  krige <- automap::autoKrige(stats::as.formula(formula), num.var,
                               new_data = sp::SpatialPointsDataFrame(sf::st_coordinates(sf::st_as_sf(newdat)),
                                                                     data = as.data.frame(newdat),
                                                                     proj4string = crs),
@@ -575,13 +576,13 @@ medianImpute <- function(site, var, method = "medianImpute", k = 5) {
 
 meanImpute <- function(site, var) {
 
-  library(dplyr, verbose = FALSE)
+  # library(dplyr, verbose = FALSE)
 
   # Select variables to impute for
   num.var <- as.data.frame(dplyr::select(site, var))  # automatically selects geometry
 
   var.impute <- num.var %>%
-    mutate(across(var, ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+    dplyr::mutate(dplyr::across(var, ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
 
   return(var.impute)
 }

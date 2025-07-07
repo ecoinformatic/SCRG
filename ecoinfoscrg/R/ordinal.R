@@ -1,3 +1,4 @@
+# Ordinal probit regression
 ordinal <- function(formula,data)
 {
   n <- nrow(data)
@@ -14,7 +15,7 @@ ordinal <- function(formula,data)
   # quantile scale
   K <- max(Y)
   P <- seq(0,1,length.out=K+1)
-  Q <- qnorm(P)
+  Q <- stats::qnorm(P)
   Q[K+1] <- Inf # fix NaN
 
   nloglike <- function(par,zero=0)
@@ -22,7 +23,7 @@ ordinal <- function(formula,data)
     # linear effect
     LE <- c(D %*% par)
 
-    NLL <- sum(-log(pnorm(Q[Y+1]-LE)-pnorm(Q[Y]-LE)) - zero/n)
+    NLL <- sum(-log(stats::pnorm(Q[Y+1]-LE)-stats::pnorm(Q[Y]-LE)) - zero/n)
     return(NLL)
   }
 

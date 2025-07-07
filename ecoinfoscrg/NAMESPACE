@@ -1,9 +1,26 @@
 exportPattern("^[[:alpha:]]+")
-import(devtools)
+
+#IMPORTS
 import(dplyr)
-import(metafor)
-import(Matrix)
-import(nnet)
+# import(Matrix)
 import(sf)
 import(stringdist)
-import(testthat)
+import(ctmm)
+# import(testthat)
+importFrom("metafor", "rma.mv")
+importFrom("stats", "model.matrix", "model.frame", "model.extract", "as.formula",
+           "na.omit", "pnorm", "qnorm", "sd")
+importFrom("sp", "CRS", "SpatialPointsDataFrame")
+importFrom("automap", "autoKrige")
+importFrom("caret", "preProcess")
+importFrom("stringr", "str_c", "str_replace_all", "regex")
+
+#DATA CLEANING/HANDLING FUNCTIONS
+export("wranglingCleaning")
+export("standardize")
+
+#META-ANALYTIC REGRESSION FUNCTIONS
+export("getBetas")
+export("varCov")
+export("meta_regression")
+

@@ -1,49 +1,128 @@
-# # Source getBetas.R script for predictors
-# source("R/getBetas.R")
+# Function for retrieving/cleaning variance-covariance matrices from model selection
+#' @export
+varCov <- function(data, mods, Betas) {
 
-# Load final models from model selection
-# choc_mod_new <- readRDS("data/choc_non_parallel_new_final_model.rds")
-# pens_mod_new <- readRDS("data/pens_non_parallel_new_final_model.rds")
-# tampa_mod_new <- readRDS("data/tampa_non_parallel_new_final_model.rds")
-# IRL_mod_new <- readRDS("data/IRL_non_parallel_new_final_model.rds")
+  # Check if `Betas` exists
+  if(!exists("mods")) {
+    stop("No models found. Please assign the selected model from each study to a list named `mods`.")
+  } else { message(paste("Identified selected models from", length(mods), "studies.")) }
 
-# choc_mod_new <- readRDS("data/choc_fix_ordinal_final_model.rds")
-# pens_mod_new <- readRDS("data/pens_fix_ordinal_final_model.rds")
-# tampa_mod_new <- readRDS("data/tampa_fix_ordinal_final_model.rds")
-# IRL_mod_new <- readRDS("data/IRL_fix_ordinal_final_model.rds")
+  # Check if `Betas` exists
+  if(!exists("Betas")) {
+    stop("No betas found. Please assign beta coefficient estimates from selected models to a list named `Betas`.")
+  } else { message(paste("Identified beta coefficient estimates from", length(Betas), "studies.")) }
 
-# Check if `Betas` exists
-if(!exists("mods")) {
-  stop("No models found. Please assign the selected model from each study to a list named `mods`.")
-} else { message(paste("Identified selected models from", length(mods), "studies.")) }
+  # Retrieve cleaned predictor data and study names
+  pred <- data$predictors
+  studies <- unique(data$state$study)
 
-# mods <- list(choc_mod_new, pens_mod_new, tampa_mod_new, IRL_mod_new) # aggregate models from studies
+  # Get predictors (excluding study and definitions)
+  pred <- pred %>%
+    dplyr::mutate(dplyr::across(c("OBJECTID", "ID", "bmpCountv5", "n", "distance", "X", "Y"), as.character))
+  ## keep non predictor data as characters to avoid being selected as predictors
+  numeric_pred <- pred %>%
+    dplyr::select_if(is.numeric)
+  factor_pred <- pred %>%
+    dplyr::select_if(is.factor)
+  numeric_pred_cols <- colnames(cbind(factor_pred, numeric_pred))
+
+  # Retrieve covariance matrices from each model
+  cov_matrix <- list(mods[[1]]$COV,
+                     mods[[2]]$COV,
+                     mods[[3]]$COV,
+                     mods[[4]]$COV)
 
 
-# Retrieve local betas
-# choc_Betas <- readRDS("data/choc_non_parallel_new_average_betas.rds")
-# pens_Betas <- readRDS("data/pens_non_parallel_new_average_betas.rds")
-# tampa_Betas <- readRDS("data/tampa_non_parallel_new_average_betas.rds")
-# IRL_Betas <- readRDS("data/IRL_non_parallel_new_average_betas.rds")
+  # Source getBetas.R script for predictors and to combine betas
+  # source("R/getBetas.R")
 
-# chocBetas <- readRDS("data/choc_fix_ordinal_betas.rds")
-# pensBetas <- readRDS("data/pens_fix_ordinal_betas.rds")
-# tampaBetas <- readRDS("data/tampa_fix_ordinal_betas.rds")
-# IRLBetas <- readRDS("data/IRL_fix_ordinal_betas.rds")
+  # Retrieve and combine betas (using getBetas.R)
+  GB <- getBetas(data, Betas)
 
-# Check if `Betas` exists
-if(!exists("Betas")) {
-  stop("No betas found. Please assign beta coefficient estimates from selected models to a list named `Betas`.")
-} else { message(paste("Identified beta coefficient estimates from", length(Betas), "studies.")) }
+  # Re-assign outputs for easy access
+  combined_betas <- GB$combined_betas
+  combined_betas_only <- GB$combined_betas_only
+  combined_se <- GB$combined_se
+  combined_se_only <- GB$combined_se_only
 
-# studies_betas <- list(chocBetas, pensBetas, tampaBetas, IRLBetas)  # aggregate betas from studies
+  for (i in 1:length(cov_matrix)) {
 
-# Retrieve covariance matrices from each model
-cov_matrix <- list(mods[[1]]$COV,
-                   mods[[2]]$COV,
-                   mods[[3]]$COV,
-                   mods[[4]]$COV)
+    # # Symmetrization of matrices
+    # cov_matrix[[i]] <- (cov_matrix[[i]] + t(cov_matrix[[i]]))/2
 
+    # Remove intercepts
+    cov_matrix[[i]] <- cov_matrix[[i]][2:(dim(cov_matrix[[i]])[[1]]),
+                                       2:(dim(cov_matrix[[i]])[[2]])]
+  }
+
+  # Find where there are missing values
+  missing_values <- list()
+  for (i in 1:length(cov_matrix)) {
+
+    # Find non-selected predictors
+    selected <- dimnames(cov_matrix[[i]])
+    missing_preds <- setdiff(numeric_pred_cols, selected[[1]])
+    missing_col <- matrix(NA, length(selected[[1]]), length(missing_preds))
+    missing_row <- matrix(NA, length(missing_preds), length(c(selected[[1]], missing_preds)))
+    cov_matrix[[i]] <- cbind(cov_matrix[[i]], missing_col)
+    cov_matrix[[i]] <- rbind(cov_matrix[[i]], missing_row)
+    dimnames(cov_matrix[[i]]) <- list(c(selected[[1]], missing_preds),
+                                      c(selected[[1]], missing_preds))
+
+    # Predictors with missing values
+    missing_values[[i]] <- is.na(cov_matrix[[i]])
+
+    # Set missing off-diagonals to zero
+    cov_matrix[[i]][missing_values[[i]] & !row(cov_matrix[[i]]) == col(cov_matrix[[i]])] <- 0
+
+    # Set missing variances to very large value
+    # large_value <- 10000
+    large_value <- (.Machine$double.eps)^(-1/3)
+    diag(cov_matrix[[i]])[missing_values[[i]][diag(TRUE, nrow(cov_matrix[[i]]))]] <- large_value
+    # # Set infinite variances to very large value
+    # diag(cov_matrix[[i]])[which(is.infinite(diag(cov_matrix[[i]])))] <- large_value
+    # # Set very large variances to very large value
+    # diag(cov_matrix[[i]])[which(diag(cov_matrix[[i]])>large_value)] <- large_value
+
+  }
+
+  # Source matrix cleaning script
+  # source("inst/scripts/clean_matrix.R")
+
+  # Clean each covariance matrix
+  adjusted_cov_matrix <- list()
+  for (i in 1:length(cov_matrix)) {
+    adjusted_cov_matrix[[i]] <- clean_matrix(cov_matrix[[i]])
+  }
+
+
+  # Grab variances from each matrix
+  VAR <- combined_betas_only  # simulate structure of combined betas dataframe
+  for (i in 1:nrow(VAR)) {
+    for (j in 1:ncol(VAR)) {
+
+      # Add variances to corresponding predictor and study
+      # VAR[i,j] <- diag(cov_matrix[[i]])[which(names(diag(cov_matrix[[i]])) == colnames(VAR)[j])]
+      VAR[i,j] <- diag(adjusted_cov_matrix[[i]])[which(names(diag(adjusted_cov_matrix[[i]])) == colnames(VAR)[j])]
+    }
+  }
+
+  return(list(VAR = VAR,
+              adjusted_cov_matrix = adjusted_cov_matrix,
+              combined_betas = combined_betas,
+              combined_betas_only = combined_betas_only,
+              combined_se = combined_se,
+              combined_se_only = combined_se_only))
+
+}
+
+
+
+
+
+
+
+## OLD CODE ##
 
 # # Only using variances for now
 # cov_matrix <- list(choc = ctmm::pd.solve(choc_mod_new$Hessian),
@@ -89,94 +168,6 @@ cov_matrix <- list(mods[[1]]$COV,
 # IRLBetas <- updated_mods[[4]]$betas_new
 
 
-
-# Source getBetas.R script for predictors and to combine betas
-source("R/getBetas.R")
-
-# print("done getBetas.R")
-
-
-for (i in 1:length(cov_matrix)) {
-
-  # # Symmetrization of matrices
-  # cov_matrix[[i]] <- (cov_matrix[[i]] + t(cov_matrix[[i]]))/2
-
-  # Remove intercepts
-  cov_matrix[[i]] <- cov_matrix[[i]][2:(dim(cov_matrix[[i]])[[1]]),
-                                     2:(dim(cov_matrix[[i]])[[2]])]
-}
-
-# Find where there's missing values
-missing_values <- list()
-for (i in 1:length(cov_matrix)) {
-
-  # Find non-selected predictors
-  selected <- dimnames(cov_matrix[[i]])
-  missing_preds <- setdiff(numeric_pred_cols, selected[[1]])
-  missing_col <- matrix(NA, length(selected[[1]]), length(missing_preds))
-  missing_row <- matrix(NA, length(missing_preds), length(c(selected[[1]], missing_preds)))
-  cov_matrix[[i]] <- cbind(cov_matrix[[i]], missing_col)
-  cov_matrix[[i]] <- rbind(cov_matrix[[i]], missing_row)
-  dimnames(cov_matrix[[i]]) <- list(c(selected[[1]], missing_preds),
-                                    c(selected[[1]], missing_preds))
-
-  # Predictors with missing values
-  missing_values[[i]] <- is.na(cov_matrix[[i]])
-
-  # Set missing off-diagonals to zero
-  cov_matrix[[i]][missing_values[[i]] & !row(cov_matrix[[i]]) == col(cov_matrix[[i]])] <- 0
-
-  # Set missing variances to very large value
-  # large_value <- 10000
-  large_value <- (.Machine$double.eps)^(-1/3)
-  diag(cov_matrix[[i]])[missing_values[[i]][diag(TRUE, nrow(cov_matrix[[i]]))]] <- large_value
-  # # Set infinite variances to very large value
-  # diag(cov_matrix[[i]])[which(is.infinite(diag(cov_matrix[[i]])))] <- large_value
-  # # Set very large variances to very large value
-  # diag(cov_matrix[[i]])[which(diag(cov_matrix[[i]])>large_value)] <- large_value
-
-}
-# View(cov_matrix)
-
-# save(cov_matrix, file = "../output/cov_matrices.rda")
-
-# Source matrix cleaning script
-source("inst/scripts/clean_matrix.R")
-
-# Clean each covariance matrix
-adjusted_cov_matrix <- list()
-for (i in 1:length(cov_matrix)) {
-  adjusted_cov_matrix[[i]] <- clean_matrix(cov_matrix[[i]])
-}
-
-
-# Grab variances from each matrix
-VAR <- combined_betas_only  # simulate structure of combined betas dataframe
-for (i in 1:nrow(VAR)) {
-  for (j in 1:ncol(VAR)) {
-
-    # Add variances to corresponding predictor and study
-    # VAR[i,j] <- diag(cov_matrix[[i]])[which(names(diag(cov_matrix[[i]])) == colnames(VAR)[j])]
-    VAR[i,j] <- diag(adjusted_cov_matrix[[i]])[which(names(diag(adjusted_cov_matrix[[i]])) == colnames(VAR)[j])]
-  }
-}
-
-
-
-# View(VAR)
-
-# save(VAR, file = "../output/variances.rda")
-
-
-
-
-# For Choc, try leaving out one then leaving out the other and averaging the betas and COVs
-
-
-
-
-
-## OLD CODE ##
 
 # # Generate covariance matrix
 # # cov_matrix <- cov(combined_betas_only, use = "pairwise.complete.obs") # calculates the correlation between each pair of variables using all complete pairs of observations for those variables
