@@ -522,6 +522,7 @@ standardize <- function(data,
 
 # `automap::autoKrige()` used for automated spatial interpolation at specific sites
 #' @noRd
+#' @keywords internal
 krigePredictors <- function(site, var, formula, duplicates = TRUE) {
 
   # Prepare spatial data
@@ -553,6 +554,7 @@ krigePredictors <- function(site, var, formula, duplicates = TRUE) {
 
 # `caret::preProcess()` for median, K-nearest neighbors, or bagged imputation
 #' @noRd
+#' @keywords internal
 medianImpute <- function(site, var, method = "medianImpute", k = 5) {
 
   # Select variables to impute for
@@ -574,6 +576,7 @@ medianImpute <- function(site, var, method = "medianImpute", k = 5) {
 
 # Mean imputation with `dplyr`
 #' @noRd
+#' @keywords internal
 meanImpute <- function(site, var) {
 
   # library(dplyr, verbose = FALSE)

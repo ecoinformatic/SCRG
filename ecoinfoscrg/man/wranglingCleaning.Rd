@@ -37,7 +37,7 @@ Returns a list with:
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{ecoinfoscrg-package}}, \code{\link{standardize}}, and vignettes.
+\code{\link{ecoinfoscrg}}, \code{\link{standardize}}, and vignettes.
 }
 %%\examples{
 %%##---- Should be DIRECTLY executable !! ----

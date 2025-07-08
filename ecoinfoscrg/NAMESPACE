@@ -6,20 +6,24 @@ import(dplyr)
 import(sf)
 import(stringdist)
 import(ctmm)
+import(ggplot2)
 # import(testthat)
 importFrom("metafor", "rma.mv")
 importFrom("stats", "model.matrix", "model.frame", "model.extract", "as.formula",
-           "na.omit", "pnorm", "qnorm", "sd")
+           "na.omit", "pnorm", "qnorm", "sd", "update")
 importFrom("sp", "CRS", "SpatialPointsDataFrame")
 importFrom("automap", "autoKrige")
 importFrom("caret", "preProcess")
 importFrom("stringr", "str_c", "str_replace_all", "regex")
+importFrom("parallel", "detectCores", "mclapply")
+importFrom("tictoc", "tic", "toc")
 
 #DATA CLEANING/HANDLING FUNCTIONS
 export("wranglingCleaning")
 export("standardize")
 
 #META-ANALYTIC REGRESSION FUNCTIONS
+export("BUPD")
 export("getBetas")
 export("varCov")
 export("meta_regression")

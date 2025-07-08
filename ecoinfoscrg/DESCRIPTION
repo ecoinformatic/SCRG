@@ -21,6 +21,11 @@ Description: Meta-analysis and Living Shoreline Suitability Model for the state 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: dplyr, metafor, sf, stringdist, stats, ctmm, automap, caret, sp, stringr
+Imports: dplyr, metafor, sf, stringdist, stats, ctmm, automap, caret, sp, stringr, 
+    parallel, tictoc, ggplot2
 Depends: 
     R (>= 2.10)
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

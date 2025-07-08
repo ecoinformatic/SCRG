@@ -1,11 +1,13 @@
 # library(sf)
 # library(stringdist)
 #' @noRd
+#' @keywords internal
 scrg__drawlinestr <- function(coords, crs=4326) {
   return(sf::st_sfc(sf::st_linestring(matrix(coords, ncol=2)), crs=crs))
 }
 
 #' @noRd
+#' @keywords internal
 scrg__get_features_from_sf <- function(sf) {
   # This function takes a geospatial object and returns the features as a data
   # frame.
@@ -13,6 +15,7 @@ scrg__get_features_from_sf <- function(sf) {
 }
 
 #' @noRd
+#' @keywords internal
 scrg__get_line_from_linestrings <- function(
       lstrings, test_line, element_number, crs="EPSG:4326"
     )
@@ -29,6 +32,7 @@ scrg__get_line_from_linestrings <- function(
 }
 
 #' @noRd
+#' @keywords internal
 scrg__get_geometry_in_bbox <- function(points, sf_object) {
   # This function takes a series of points and an sf object, and returns a
   # subset of the sf object that falls within the bounding box formed by the
@@ -46,7 +50,8 @@ scrg__get_geometry_in_bbox <- function(points, sf_object) {
 }
 
 #' @noRd
-scrg__get_geometry_in_bbox <- function(point_list, sf_object, byrow=TRUE) {
+#' @keywords internal
+scrg__get_geometry_in_bbox2 <- function(point_list, sf_object, byrow=TRUE) {
   # This function takes a series of points and an sf object, and returns a
   # subset of the sf object that falls within the bounding box formed by the
   # series of points.
@@ -56,6 +61,7 @@ scrg__get_geometry_in_bbox <- function(point_list, sf_object, byrow=TRUE) {
 }
 
 #' @noRd
+#' @keywords internal
 scrg__get_geometry_in_polygon <- function(polygon, sf_object) {
   # Returns an sf object that is a subset of all entries with a geometry that
   # is within the provided polygon.
@@ -63,6 +69,7 @@ scrg__get_geometry_in_polygon <- function(polygon, sf_object) {
 }
 
 #' @noRd
+#' @keywords internal
 scrg__make_string_distance_diff <- function(x, y, dropMatches=NULL) {
   # Takes two character vectors and compares the string distances between each
   # element of both vectors. Function returns a matrix of the results.
@@ -93,12 +100,14 @@ scrg__make_string_distance_diff <- function(x, y, dropMatches=NULL) {
 }
 
 #' @noRd
+#' @keywords internal
 scrg__multiline_length <- function(multiline_str) {
   # Returns the number of LINESTRING in a MULTILINESTRING
   return(multiline_str[[1]][[1]] / 2)
 }
 
 #' @noRd
+#' @keywords internal
 scrg__venn_set <- function(x, y) {
   # Making a venn diagram of two vectors to determine what is not in the other
   # vector

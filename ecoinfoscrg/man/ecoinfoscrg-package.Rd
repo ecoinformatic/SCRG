@@ -6,13 +6,13 @@ Includes functions and workflows for updating and predicting from the SCRG meta-
 
 To learn more and view examples of package usage, please see the vignettes \code{browseVignettes(package = "dplyr")}.
 
-For additional code and materials related to the model and SCRG project, visit \link{https://github.com/ecoinformatic/SCRG}.
+For additional code and materials related to the model and SCRG project, visit: https://github.com/ecoinformatic/SCRG.
 }
 \author{
 \strong{Maintainer}: UCF Ecoinformatics Lab \email{Christen.Fleming@ucf.edu}, \email{George.Zaragosa@ucf.edu}, \email{Erika.Lin@ucf.edu}
 
 \strong{Contributors}: Christen H. Fleming, George Zaragosa, Thomas A. Hellinger, Erika Y. Lin, Bruno Pinheiro, Nozomu Hirama}
 \seealso{
-\link{https://github.com/ecoinformatic/SCRG}
+https://github.com/ecoinformatic/SCRG
 }
 

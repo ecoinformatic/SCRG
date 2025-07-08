@@ -13,9 +13,9 @@ varCov(data, mods, Betas)
   \item{mods}{List of the same length as the number of studies, where each item is the selected model for the study site. Model selection is to be conducted using the "build-up pair-down" method, via \code{BUPD} (parallelized) or \code{BUPD_nonparallel} (for Windows operating systems).}
   \item{Betas}{List of the same length as the number of studies, where each item is the model summary of beta and standard error estimates for selected predictors. These results should be saved upon running model selection for each study. See \code{BUPD} or \code{BUPD_nonparallel} and associated vignettes at \code{vignette(package = "ecoinfoscrg")}.}
 }
-\details{
+%%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%%}
 \value{
 Returns a list of:
 

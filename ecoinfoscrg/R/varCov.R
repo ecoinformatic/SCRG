@@ -2,7 +2,7 @@
 #' @export
 varCov <- function(data, mods, Betas) {
 
-  # Check if `Betas` exists
+  # Check if `mods` exists
   if(!exists("mods")) {
     stop("No models found. Please assign the selected model from each study to a list named `mods`.")
   } else { message(paste("Identified selected models from", length(mods), "studies.")) }

@@ -1,4 +1,5 @@
 #' @noRd
+#' @keywords internal
 # VAR-COV matrix cleaning
 clean_matrix <- function(COV,precision=1/3)
 {
