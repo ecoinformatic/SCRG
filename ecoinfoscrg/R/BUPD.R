@@ -12,7 +12,8 @@ BUPD <- function(data, predictors, parallel = FALSE) {
   # Retrieve predictor data
   pred <- data$predictors
   pred <- pred %>%
-    dplyr::select(dplyr::all_of(c(predictors,study)))
+    dplyr::select(dplyr::all_of(predictors))
+  pred$study <- resp$study
 
   # Identify the studies
   studies <- unique(resp$study)  # vector of study names
