@@ -160,7 +160,7 @@ Model selection is done by the `BUPD.R` and BUPD_nonparallel.R` scripts. These s
 
 Model selection via BUPD is done for each study separately, before combining the results into a meta-analysis model that will enable comparable predictions of living shoreline suitability along the entire Florida coastline. The process returns the final selected model (lowest AIC) for each site, as well as the model formula, odds ratios, and beta coefficient estimates, and the run time for the process.
 
-```{r model_selection, eval = FALSE}
+```{r model_selection}
 
 # Retrieve predictor data
 pred <- data$predictors  
@@ -176,11 +176,13 @@ factor_pred <- pred %>%
 pred <- cbind(factor_pred, numeric_pred)
 predictors <- colnames(pred)
 
+```
+
+```{r model_selection1, eval = FALSE}
+
 # Model selection for all 4 studies
 results <- BUPD(data = data, predictors = predictors, 
                 parallel = FALSE)  # TRUE for faster run time if using Linux/Mac
-
-str(results)  # inspect the results
 
 ```
 
@@ -192,11 +194,14 @@ save(results, file = "data/BUPD_results.rda")  # file path
 # Load saved data
 load("data/BUPD_results.rda")  # imports the named "results" object
 
+str(results)  # inspect the results
+
 ```
 
-```{r model_selection2, echo = FALSE, eval = FALSE}
+```{r model_selection2, echo = FALSE}
 
 load("../Data/BUPD_results.rda")
+str(results)  # inspect the results
 
 ```
 
