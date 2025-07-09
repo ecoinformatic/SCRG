@@ -248,7 +248,7 @@ The `predict.meta()` function can be used to predict the suitability of a site f
 ```{r predict, eval = FALSE}
 
 # Predict from updated model
-predictions <- ecoinfoscrg::predict(data = data, meta_regression = meta_analysis)
+predictions <- predict.meta_regression(data = data, meta_regression = meta_analysis)
 
 # Add predictions to full predictor data set
 pred$study <- data$state$study  # add studies back to predictors
@@ -289,7 +289,7 @@ plot_choc <- cbind(plot_choc, choc_coords)  # append to predictors
 choc_map <- basemaps::basemap_ggplot(ext = choc_bb) +  # extent = bounding box
   geom_sf(data = plot_choc, aes(x = X, y = Y, color = predictions), size = 0.25) +
   labs(x = "Latitude", y = "Longitude", title = "Choctawatchee Bay") +
-  scale_color_gradient2(name = "Suitability", midpoint = 0.5,
+  scale_color_gradient2(name = "Suitability", midpoint = 0.5, limits = c(0,1),
                         low = "#B31B1B", mid = "#FCF75E", high = "#0BDA51") +
   theme(plot.background = element_blank(),
         panel.background = element_blank(),
@@ -329,7 +329,7 @@ plot_pens <- cbind(plot_pens, pens_coords)  # append to predictors
 pens_map <- basemaps::basemap_ggplot(ext = pens_bb) +  # extent = bounding box
   geom_sf(data = plot_pens, aes(x = X, y = Y, color = predictions), size = 0.25) +
   labs(x = "Latitude", y = "Longitude", title = "Pensacola Bay") +
-  scale_color_gradient2(name = "Suitability", midpoint = 0.5,
+  scale_color_gradient2(name = "Suitability", midpoint = 0.5, limits = c(0,1),
                         low = "#B31B1B", mid = "#FCF75E", high = "#0BDA51") +
   theme(plot.background = element_blank(),
         panel.background = element_blank(),
@@ -369,7 +369,7 @@ plot_tampa <- cbind(plot_tampa, tampa_coords)  # append to predictors
 tampa_map <- basemaps::basemap_ggplot(ext = tampa_bb) +  # extent = bounding box
   geom_sf(data = plot_tampa, aes(x = X, y = Y, color = predictions), size = 0.25) +
   labs(x = "Latitude", y = "Longitude", title = "Tampa Bay") +
-  scale_color_gradient2(name = "Suitability", midpoint = 0.5,
+  scale_color_gradient2(name = "Suitability", midpoint = 0.5, limits = c(0,1),
                         low = "#B31B1B", mid = "#FCF75E", high = "#0BDA51") +
   theme(plot.background = element_blank(),
         panel.background = element_blank(),
@@ -409,7 +409,7 @@ plot_IRL <- cbind(plot_IRL, IRL_coords)  # append to predictors
 IRL_map <- basemaps::basemap_ggplot(ext = IRL_bb) +  # extent = bounding box
   geom_sf(data = plot_IRL, aes(x = X, y = Y, color = predictions), size = 0.25) +
   labs(x = "Latitude", y = "Longitude", title = "Indian River Lagoon") +
-  scale_color_gradient2(name = "Suitability", midpoint = 0.5,
+  scale_color_gradient2(name = "Suitability", midpoint = 0.5, limits = c(0,1),
                         low = "#B31B1B", mid = "#FCF75E", high = "#0BDA51") +
   theme(plot.background = element_blank(),
         panel.background = element_blank(),
