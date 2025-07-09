@@ -29,9 +29,15 @@ There is currently no required version of R, but it is recommended that
 the version be > 4, if not >= 4.3. Make sure that your R environment has the following packages:
 
 ```r
-install.package(sf)
-install.package(stringdist)
-install.package(nnet)
-install.package(testthat)
-install.package(devtools)
+install.packages("sf")
+install.packages("stringdist")
+install.packages("devtools")
+# You will need to access an archived version of the `automap` package
+devtools::install_version("automap", version = "1.1-12", repos = "http://cran.us.r-project.org")
+
+# Since the package is contained in a subdirectory of this repository,
+# you will need to specify that you want to install from the "ecoinfoscrg" subdirectory
+devtools::install_github("https://github.com/ecoinformatic/SCRG/", subdir = "ecoinfoscrg")
 ```
+
+An example workflow for the package "Meta-Analysis_Model_Full_Workflow" can be found in the "ecoinfoscrg/inst/scripts/" subdirectory.
