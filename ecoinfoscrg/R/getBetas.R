@@ -1,6 +1,6 @@
 # Function for organizing beta estimates
 #' @export
-getBetas <- function(data, Betas) {
+getBetas <- function(data, predictors, Betas) {
 
   # library(dplyr, quietly = TRUE)
 

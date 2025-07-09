@@ -221,7 +221,10 @@ Betas <- list(results[[1]]$coefs,  # 1st study (Choctawatchee)
               results[[4]]$coefs)  # 4th study (IRL)
 
 # Retrieve betas and variance-covariance matrices for betas
-VARCOV <- varCov(data = data, mods = mods, Betas = Betas)
+VARCOV <- varCov(data = data, 
+                 predictors = predictors,
+                 mods = mods, 
+                 Betas = Betas)
 
 ```
 
