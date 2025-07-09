@@ -3,7 +3,7 @@
 \docType{data}
 \title{Mean used for standardizing predictor data}
 \description{
-Column means for predictor data of original studies used to build the meta-analysis model, used for standardization.
+Column means for numeric predictor data of original studies used to build the meta-analysis model, used for standardization.
 }
 \format{
   The format is:

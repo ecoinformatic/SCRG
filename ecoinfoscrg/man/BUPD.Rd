@@ -7,7 +7,6 @@ Conducts AIC-based model selection using the "build-up pair-down" method, in whi
 \usage{
 BUPD(data, predictors, parallel = FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{Cleaned and standardized output following \code{\link{wranglingCleaning}} and \code{\link{standardize}}. This should be a list of the following items: \code{state}, \code{predictors}, \code{numerical_vars}, \code{categorical_vars}, and \code{binary_vars}.}
   \item{predictors}{Data frame of numeric and factored predictor variables with values combined across studies. This should follow the same format as the predictors object output from \code{\link{standardize}}. See \code{vignette("Meta-Analysis_Model_Full_Workflow", package = ecoinfoscrg)} and other vignettes for examples.}

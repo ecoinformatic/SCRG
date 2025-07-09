@@ -29,56 +29,59 @@ wranglingCleaning <- function(data, response) {
   # Convert response variable to numeric levels 1-3
   for (i in 1:length(studies)) {
 
-    # Rename columns that should have consistent names
-    ## Exposure
-    if ("MxQExpCode" %in% colnames(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], Exposure = "MxQExpCode")
-    } else if ("exposure" %in% colnames(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], Exposure = "exposure")
-    }
-    # WideBeach
-    if ("widebeach" %in% colnames(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], WideBeach = "widebeach")
-    }
-    # Beach
-    if ("beach" %in% names(studies[[i]])) {
-      studies[[i]] <- dplyr::rename(studies[[i]], Beach = "beach")
-    }
+    if (!is.null(response)) {
 
-    # Rename response column
-    studies[[i]] <- dplyr::rename(studies[[i]], Response = paste0(response[i]))
+      # Rename columns that should have consistent names
+      ## Exposure
+      if ("MxQExpCode" %in% colnames(studies[[i]])) {
+        studies[[i]] <- dplyr::rename(studies[[i]], Exposure = "MxQExpCode")
+      } else if ("exposure" %in% colnames(studies[[i]])) {
+        studies[[i]] <- dplyr::rename(studies[[i]], Exposure = "exposure")
+      }
+      # WideBeach
+      if ("widebeach" %in% colnames(studies[[i]])) {
+        studies[[i]] <- dplyr::rename(studies[[i]], WideBeach = "widebeach")
+      }
+      # Beach
+      if ("beach" %in% names(studies[[i]])) {
+        studies[[i]] <- dplyr::rename(studies[[i]], Beach = "beach")
+      }
 
-    # Convert LSSM evaluation to levels 1-3
-    studies[[i]] <- studies[[i]] %>%
-      dplyr::mutate(Response = as.numeric(dplyr::case_when(
-        Response %in% c("Maintain Beach or Offshore Breakwater with Beach Nourishment",
-                        "Non-Structural Living Shoreline",
-                        "Plant Marsh with Sill", "Existing Marsh Sill", "Existing Breakwater",
-                        "Maintain/Enhance/Restore Riparian Buffer<br>Maintain Beach OR Offshore Breakwaters with Beach Nourishment",
-                        "Maintain/Enhance/Restore Riparian Buffer<br>Maintain/Enhance/Create Marsh",
-                        "Land Use Management<br>Maintain Beach OR Offshore Breakwaters with Beach Nourishment",
-                        "Land Use Management<br>Maintain/Enhance/Create Marsh",
-                        "Maintain/Enhance/Restore Riparian Buffer<br>Plant Marsh with Sill",
-                        "Land Use Management<br>Plant Marsh with Sill",
-                        "Option 2 or 5", "Option 1", "Maintain/Enhance/Restore Riparian Buffer<br>", "3") ~ "3",
-        Response %in% c("Ecological Conflicts. Seek regulatory advice.",
-                        "Highly Modified Area. Seek expert advice.",
-                        "Land Use Management", "Land Use Management<br>",
-                        "No Action Needed",
-                        "Special Geomorphic Feature. Seek expert advice.",
-                        "Land Use Management<br>Ecological Conflicts. Seek regulatory advice.",
-                        "Maintain/Enhance/Restore Riparian Buffer<br>Ecological Conflicts. Seek regulatory advice.", "2") ~ "2",
-        Response %in% c("Groin Field with Beach Nourishment",
-                        "Maintain/Enhance/Restore Riparian Buffer<br>Groin Field with Beach Nourishment",
-                        "Revetment", "Maintain/Enhance/Restore Riparian Buffer<br>Revetment",
-                        "Revetment/Bulkhead Toe Revetment",
-                        "Revetment/Bulkhead Toe Revetment Replacement",
-                        "Option B3 or B4", "Option B8 or B9", "Option R7 or R8",
-                        "Option B7", "Option R3 or R4", "Option 6", "1") ~ "1",
-        TRUE ~ "1"  # NAs to 1
-      )))
-    # NOTE: other forms of living shoreline suitability evaluations will need additional steps
-    ## See `Meta-Analysis_Model_Full_Workflow.Rmd` for examples of pre-processing/modifications
+      # Rename response column
+      studies[[i]] <- dplyr::rename(studies[[i]], Response = paste0(response[i]))
+
+      # Convert LSSM evaluation to levels 1-3
+      studies[[i]] <- studies[[i]] %>%
+        dplyr::mutate(Response = as.numeric(dplyr::case_when(
+          Response %in% c("Maintain Beach or Offshore Breakwater with Beach Nourishment",
+                          "Non-Structural Living Shoreline",
+                          "Plant Marsh with Sill", "Existing Marsh Sill", "Existing Breakwater",
+                          "Maintain/Enhance/Restore Riparian Buffer<br>Maintain Beach OR Offshore Breakwaters with Beach Nourishment",
+                          "Maintain/Enhance/Restore Riparian Buffer<br>Maintain/Enhance/Create Marsh",
+                          "Land Use Management<br>Maintain Beach OR Offshore Breakwaters with Beach Nourishment",
+                          "Land Use Management<br>Maintain/Enhance/Create Marsh",
+                          "Maintain/Enhance/Restore Riparian Buffer<br>Plant Marsh with Sill",
+                          "Land Use Management<br>Plant Marsh with Sill",
+                          "Option 2 or 5", "Option 1", "Maintain/Enhance/Restore Riparian Buffer<br>", "3") ~ "3",
+          Response %in% c("Ecological Conflicts. Seek regulatory advice.",
+                          "Highly Modified Area. Seek expert advice.",
+                          "Land Use Management", "Land Use Management<br>",
+                          "No Action Needed",
+                          "Special Geomorphic Feature. Seek expert advice.",
+                          "Land Use Management<br>Ecological Conflicts. Seek regulatory advice.",
+                          "Maintain/Enhance/Restore Riparian Buffer<br>Ecological Conflicts. Seek regulatory advice.", "2") ~ "2",
+          Response %in% c("Groin Field with Beach Nourishment",
+                          "Maintain/Enhance/Restore Riparian Buffer<br>Groin Field with Beach Nourishment",
+                          "Revetment", "Maintain/Enhance/Restore Riparian Buffer<br>Revetment",
+                          "Revetment/Bulkhead Toe Revetment",
+                          "Revetment/Bulkhead Toe Revetment Replacement",
+                          "Option B3 or B4", "Option B8 or B9", "Option R7 or R8",
+                          "Option B7", "Option R3 or R4", "Option 6", "1") ~ "1",
+          TRUE ~ "1"  # NAs to 1
+        )))
+      # NOTE: other forms of living shoreline suitability evaluations will need additional steps
+      ## See `Meta-Analysis_Model_Full_Workflow.Rmd` for examples of pre-processing/modifications
+    }
 
     # Add "study" column
     studies[[i]]$study <- names(studies)[i]
@@ -86,8 +89,10 @@ wranglingCleaning <- function(data, response) {
 
   # Combine Data
   state <- dplyr::bind_rows(studies)
-  pred <- state %>%
-    dplyr::select(-"Response") # Remove response variables
+  if (!is.null(response)) {
+    pred <- state %>%
+      dplyr::select(-"Response") # Remove response variables
+  } else { pred <- state }
 
   # List numerical vars
   numerical_vars <- c("angle", "IT_Width", "Hab_W1",
@@ -158,11 +163,19 @@ wranglingCleaning <- function(data, response) {
   }
 
   # Return list of outputs
-  return(list(state = as.data.frame(state[,c("Response", "study")]),
-              predictors = pred,
-              numerical_vars = numerical_vars,
-              categorical_vars = categorical_vars2,
-              binary_vars = binary_vars))
+  if (!is.null(response)) {
+    return(list(state = as.data.frame(state[,c("Response", "study")]),
+                predictors = pred,
+                numerical_vars = numerical_vars,
+                categorical_vars = categorical_vars2,
+                binary_vars = binary_vars))
+  } else {
+    return(list(state = as.data.frame(state$study),
+                predictors = pred,
+                numerical_vars = numerical_vars,
+                categorical_vars = categorical_vars2,
+                binary_vars = binary_vars))
+  }
 }
 
 
@@ -488,12 +501,10 @@ standardize <- function(data,
   pred_num <- pred %>%
     dplyr::select(dplyr::all_of(numerical_vars))  # store numeric variables
   # MEAN <<- colMeans(pred_num, na.rm = TRUE)
-  # # assign("standardization_MEANs", value = MEAN)
   #
   # SD <- apply(pred_num, 2, sd, na.rm = TRUE)
   # names(SD) <- names(MEAN)
   # SD <<- SD
-  # # assign("standardization_SD", value = SD)
 
   # Load mean and sd to use for standardization
   # load("R/standardization_mean.rda")

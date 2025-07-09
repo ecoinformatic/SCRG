@@ -11,7 +11,7 @@ basemaps::set_defaults(map_service = "esri", map_type = "world_imagery")
 
 # Import meta-analytic regression model
 meta_analysis <- readRDS("../output/scaled_meta2.rds")  # scaled model
-meta_analysis <- readRDS("../output/unscaled_meta2.rds")  # unscaled model
+meta_analysis <- readRDS("../output/unscaled_meta3.rds")  # unscaled model
 
 # Retrieve studies for predictions
 pred <- readRDS("data/predictors_kriged_standardized.rds")

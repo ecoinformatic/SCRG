@@ -3,7 +3,7 @@
 \docType{data}
 \title{Standard deviation used for standardizing predictor data}
 \description{
-Column standard deviation values for predictor data of original studies used to build the meta-analysis model, used for standardization.
+Column standard deviation values for numeric predictor data of original studies used to build the meta-analysis model, used for standardization.
 }
 \format{
   The format is:
