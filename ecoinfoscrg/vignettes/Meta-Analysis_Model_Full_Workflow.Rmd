@@ -182,6 +182,10 @@ results <- BUPD(data = data, predictors = predictors,
 
 str(results)  # inspect the results
 
+```
+
+```{r BUPD, eval = FALSE}
+
 # Once again, we will save the results as this process can be long
 save(results, file = "data/BUPD_results.rda")  # file path
 

@@ -39,7 +39,7 @@ varCov <- function(data, predictors, mods, Betas) {
   # source("R/getBetas.R")
 
   # Retrieve and combine betas (using getBetas.R)
-  GB <- getBetas(data, Betas)
+  GB <- getBetas(data = data, predictors = predictors, Betas = Betas)
 
   # Re-assign outputs for easy access
   combined_betas <- GB$combined_betas
