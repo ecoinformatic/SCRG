@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-**Last updated 2025-07-08**
+**Last updated 2025-07-09**
 
 This workflow demonstrates how the living shoreline suitability meta-analysis model can be updated with new local data, from initial data importing and cleaning, to mapped figures of shoreline suitability. This meta-analysis model can also be used to predict the suitability and probability of success of living shoreline restoration from the geospatial data. The model and package were built for the 2024 Florida Statewide Coastal Restoration Guide (SCRG) project, and are based on the data and results of existing Living Shoreline Suitability Model (LSSM) studies. The package is maintained by the UCF Ecoinformatics Lab. Materials can be accessed at https://github.com/ecoinformatic/SCRG/. 
 <!--Note that the working directory for this workflow is the "SCRG/ecoinfoscrg" folder from https://github.com/ecoinformatic/SCRG. -->
@@ -433,5 +433,5 @@ statewide_avg[1]
 ```
 
 
-<!-- NEED TO SAVE THE BASE MODEL OUTPUT AND DATA AS INTERNAL AND FULL PRED COLMEANS -->
+<!-- NEED TO SAVE THE BASE MODEL OUTPUT AND DATA AS INTERNAL -->
 
